@@ -140,10 +140,26 @@ async function doLogin() {
   }
 }
 
-// Se já logado, vai direto para o app
+// Se já logado, vai direto para o app. Importante: exige token válido, não
+// só o objeto de usuário — os sites do GitHub Pages (ambiente-de-teste,
+// barretos-mobile-teste, produção) ficam todos sob o mesmo domínio
+// barretostransp-alt.github.io e por isso COMPARTILHAM o mesmo
+// localStorage. Um login antigo (sistema anterior, sem token) podia
+// deixar "barretos_user" salvo sem "barretos_auth_token" — e sem essa
+// checagem, essa tela mandava pro mobile.html, que mandava de volta pra
+// cá (sem token), formando um loop infinito de redirecionamento (a tela
+// "piscando" e travando o toque).
 document.addEventListener('DOMContentLoaded', function() {
   var raw = sessionStorage.getItem('barretos_user') || localStorage.getItem('barretos_user');
-  if (raw) { try { var u = JSON.parse(raw); if(u && u.login) window.location.href = 'mobile.html'; } catch(e) {} }
+  var token = localStorage.getItem('barretos_auth_token');
+  if (raw && token) {
+    try { var u = JSON.parse(raw); if (u && u.login) { window.location.href = 'mobile.html'; return; } } catch(e) {}
+  }
+  // Sessão incompleta/antiga (de outro sistema no mesmo domínio) — limpa
+  // pra não confundir a próxima tentativa de login.
+  ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k) {
+    sessionStorage.removeItem(k); localStorage.removeItem(k);
+  });
 });
 </script>
 </body>
