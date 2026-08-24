@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0E0F12">
+<meta name="apple-mobile-web-app-title" content="Barreto's">
+<link rel="manifest" href="manifest.json?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Barreto's</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--bg:#090A0D;--surface:#0F1117;--card:#151820;--border:#1E2130;
+  --gold:#F5B800;--gold-dim:rgba(245,184,0,.12);--gold-b:rgba(245,184,0,.28);
+  --txt:#E8EAF0;--txt-dim:#6B7280;--green:#22C55E;--red:#EF4444;--accent:#F5B800;}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;}
+.app{display:flex;flex-direction:column;height:100dvh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:env(safe-area-inset-top,12px) 16px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.topbar-info{flex:1;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.topbar-sub{font-size:10px;color:var(--txt-dim);margin-top:1px;}
+.topbar-user{font-size:10px;font-weight:700;color:var(--gold);background:var(--gold-dim);
+  padding:4px 10px;border-radius:20px;border:1px solid var(--gold-b);white-space:nowrap;}
+.btn-icon{background:none;border:none;color:var(--txt-dim);cursor:pointer;font-size:20px;padding:4px;}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.bottom-nav{background:var(--surface);border-top:1px solid var(--border);
+  display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.bottom-nav::-webkit-scrollbar{display:none;}
+.nav-item{flex:0 0 auto;min-width:64px;display:flex;flex-direction:column;align-items:center;
+  padding:8px 8px 6px;cursor:pointer;color:var(--txt-dim);font-size:9px;
+  font-weight:700;letter-spacing:.03em;gap:3px;border:none;background:none;transition:color .15s;}
+.nav-item i{font-size:20px;}
+.nav-item.active{color:var(--accent);}
+.col-tabs{display:flex;overflow-x:auto;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none;}
+.col-tabs::-webkit-scrollbar{display:none;}
+.col-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border);color:var(--txt-dim);background:transparent;
+  transition:all .15s;white-space:nowrap;}
+.col-tab.active{background:var(--accent);color:#111;border-color:var(--accent);}
+.search-bar{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;margin:10px 12px 0;padding:0 12px;gap:8px;flex-shrink:0;}
+.search-bar i{color:var(--txt-dim);font-size:16px;}
+.search-bar input{flex:1;background:transparent;border:none;color:var(--txt);font-size:13px;
+  padding:10px 0;outline:none;font-family:'DM Sans',sans-serif;}
+.cards-area{flex:1;overflow-y:auto;padding:10px 12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.card-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;position:relative;}
+.card-item:active{background:var(--card);}
+.ci-code{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.ci-route{font-size:10px;color:var(--txt-dim);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-title{font-size:13px;font-weight:600;margin-bottom:6px;line-height:1.3;}
+.ci-meta{display:flex;gap:6px;flex-wrap:wrap;}
+.ci-tag{font-size:10px;color:var(--txt-dim);background:var(--card);padding:2px 7px;border-radius:4px;display:flex;align-items:center;gap:3px;}
+.ci-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--txt-dim);font-size:16px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60%;gap:12px;color:var(--txt-dim);text-align:center;}
+/* ── TEMA CLARO — mesma regra do desktop: só o conteúdo/nav muda,
+   a topbar continua sempre escura. ── */
+body.tema-claro {
+  --bg:         #F0F2F5;
+  --surface:    #FFFFFF;
+  --card:       #FFFFFF;
+  --border:     #E2E6ED;
+  --gold:       #D97706;
+  --gold-dim:   rgba(217,119,6,.10);
+  --gold-b:     rgba(217,119,6,.28);
+  --txt:        #111827;
+  --txt-dim:    #6B7280;
+  --green:      #059669;
+  --red:        #DC2626;
+  --accent:     #D97706;
+}
+body.tema-claro .topbar { background:#161922 !important; border-bottom-color:#252837 !important; }
+body.tema-claro .topbar-title, body.tema-claro .topbar-user { color:#E8E9F0 !important; }
+body.tema-claro .topbar-sub { color:#9CA3AF !important; }
+body.tema-claro .btn-icon { color:#9CA3AF !important; }
+body.tema-claro .bottom-nav {
+  background:#FFFFFF !important; border-top-color:#E2E6ED !important;
+  display:flex !important; visibility:visible !important; opacity:1 !important;
+  pointer-events:auto !important; position:relative; z-index:50;
+}
+body.tema-claro .nav-item {
+  color:#6B7280 !important; visibility:visible !important; opacity:1 !important;
+  pointer-events:auto !important;
+}
+body.tema-claro .nav-item i { color:inherit !important; }
+body.tema-claro .nav-item.active { color:var(--gold) !important; }
+body.tema-claro .card-item { background:#FFFFFF !important; border-color:#E2E6ED !important; }
+body.tema-claro .ci-tag { background:#F5F7FA !important; }
+body.tema-claro .modal-sheet { background:#FFFFFF !important; }
+
+/* ── Pull to refresh ── */
+.ptr-indicator{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  height:0;overflow:hidden;transition:height .2s;
+  font-size:12px;color:var(--txt-dim);flex-shrink:0;
+  background:var(--bg);
+}
+.ptr-indicator.visible{height:44px;}
+.ptr-indicator .spinner{width:16px;height:16px;border-width:2px;}
+.ptr-arrow{font-size:18px;transition:transform .3s;display:inline-block;}
+.ptr-arrow.ready{transform:rotate(180deg);}
+
+/* ── Anexos no modal ── */
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.attach-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:9px;padding:10px 12px;
+}
+.attach-icon{font-size:20px;color:var(--gold);flex-shrink:0;}
+.attach-name{flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attach-size{font-size:10px;color:var(--txt-dim);flex-shrink:0;}
+.attach-del{background:none;border:none;color:var(--txt-dim);cursor:pointer;font-size:16px;padding:2px 4px;}
+.attach-del:active{color:var(--red);}
+.btn-attach{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:11px;border-radius:9px;border:1.5px dashed var(--border);
+  background:transparent;color:var(--txt-dim);font-size:13px;font-family:'DM Sans',sans-serif;
+  cursor:pointer;margin-top:6px;transition:border-color .15s,color .15s;
+}
+.btn-attach:active{border-color:var(--gold);color:var(--gold);}
+
+.empty-state i{font-size:40px;}
+.empty-state p{font-size:13px;}
+.fab{position:fixed;right:16px;bottom:calc(64px + env(safe-area-inset-bottom,0) + 12px);
+  width:52px;height:52px;border-radius:50%;background:var(--accent);color:#111;border:none;
+  font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(245,184,0,.4);z-index:100;}
+.fab:active{transform:scale(.92);}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;}
+.modal-ov.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:18px 18px 0 0;width:100%;
+  max-height:92dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0);}
+.modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;flex-shrink:0;}
+.modal-hd{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;}
+.modal-hd-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;}
+.modal-body{overflow-y:auto;padding:14px 16px;flex:1;}
+.mfield{margin-bottom:14px;}
+.mfield label{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-dim);margin-bottom:5px;}
+.mfield input,.mfield select,.mfield textarea{width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:9px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;
+  font-family:'DM Sans',sans-serif;-webkit-appearance:none;}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{border-color:var(--accent);}
+.mfield textarea{resize:none;height:80px;}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.btn-cancel{flex:1;background:transparent;border:1px solid var(--border);border-radius:10px;
+  color:var(--txt-dim);padding:12px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.btn-save{flex:2;background:var(--accent);border:none;border-radius:10px;color:#111;
+  padding:12px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.btn-save:disabled{opacity:.5;}
+.btn-del{background:var(--red);border:none;border-radius:10px;color:#fff;
+  padding:12px 16px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.loader{display:flex;align-items:center;justify-content:center;height:200px;}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── SIDEBAR MOBILE — navegação principal, igual ao padrão do desktop
+   (seções agrupadas), como um drawer que desliza por cima do conteúdo.
+   O menu de baixo continua existindo, como atalho rápido rolável. ── */
+.mobile-sidebar{
+  position:fixed;top:0;bottom:0;left:0;width:78%;max-width:300px;
+  background:var(--surface);border-right:1px solid var(--border);
+  z-index:300;transform:translateX(-100%);transition:transform .22s ease;
+  display:flex;flex-direction:column;overflow-y:auto;
+  padding-top:env(safe-area-inset-top,0);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.mobile-sidebar.open{transform:translateX(0);box-shadow:16px 0 40px rgba(0,0,0,.5);}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:299;}
+.sidebar-backdrop.open{display:block;}
+.sidebar-top{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{width:38px;height:38px;border-radius:9px;object-fit:cover;flex-shrink:0;}
+.sidebar-brand{font-weight:800;font-size:14px;color:var(--txt);}
+.sidebar-user-name{font-size:11px;color:var(--txt-dim);margin-top:1px;}
+.sidebar-nav-body{padding:10px 8px;flex:1;}
+.sidebar-section-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--txt-dim);padding:14px 10px 6px;}
+.sidebar-item{display:flex;align-items:center;gap:11px;width:100%;padding:11px 10px;
+  border-radius:9px;border:none;background:none;color:var(--txt);font-size:14px;
+  font-family:'DM Sans',sans-serif;cursor:pointer;text-align:left;transition:background .15s;}
+.sidebar-item i{font-size:19px;color:var(--txt-dim);flex-shrink:0;width:20px;text-align:center;}
+.sidebar-item:active{background:rgba(255,255,255,.06);}
+.sidebar-item.active{background:var(--gold-dim,rgba(245,184,0,.12));color:var(--accent);}
+.sidebar-item.active i{color:var(--accent);}
+body.tema-claro .mobile-sidebar{background:#FFFFFF !important;border-right-color:#E2E6ED !important;}
+body.tema-claro .sidebar-item{color:#111827 !important;}
+body.tema-claro .sidebar-item i{color:#6B7280 !important;}
+body.tema-claro .sidebar-item:active{background:rgba(0,0,0,.04) !important;}
+
+/* ── SUBNAV DA COTAÇÃO — Calculadora/Histórico/OC/Aprovação, só aparece
+   quando a aba Cotação está ativa; substitui as abas internas que a
+   própria cotação escondeu no mobile. Fica logo acima do menu de baixo. ── */
+.cotacao-subnav{background:var(--surface);border-top:1px solid var(--border);
+  display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;}
+.cotacao-subnav::-webkit-scrollbar{display:none;}
+.cotacao-subnav-btn{flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  padding:9px 16px;font-size:12px;font-weight:700;color:var(--txt-dim);
+  border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;}
+.cotacao-subnav-btn i{font-size:15px;}
+.cotacao-subnav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+body.tema-claro .cotacao-subnav{background:#FFFFFF !important;border-top-color:#E2E6ED !important;}
+body.tema-claro .cotacao-subnav-btn{color:#6B7280 !important;}
+body.tema-claro .cotacao-subnav-btn.active{color:var(--accent) !important;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button class="btn-icon" id="btn-menu" onclick="toggleSidebarMobile()" title="Menu" aria-label="Abrir menu"><i class="ti ti-menu-2"></i></button>
+    <div class="topbar-info">
+      <div class="topbar-title" id="top-title">Kanbans</div>
+      <div class="topbar-sub" id="top-sub">carregando...</div>
+    </div>
+    <span class="topbar-user" id="top-user">—</span>
+    <button class="btn-icon" id="btn-tema" onclick="alternarTema()" title="Alternar tema"><i class="ti ti-moon" id="ico-tema"></i></button>
+    <button class="btn-icon" onclick="logout()"><i class="ti ti-logout"></i></button>
+  </div>
+
+  <aside class="mobile-sidebar" id="mobile-sidebar">
+    <div class="sidebar-top">
+      <img src="icon-192.png" alt="Barreto's" class="sidebar-logo">
+      <div>
+        <div class="sidebar-brand">Barreto's</div>
+        <div class="sidebar-user-name" id="sidebar-user-name">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav-body" id="sidebar-nav-body"></nav>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+
+  <div class="content" id="content">
+    <div class="ptr-indicator" id="ptr-indicator">
+      <i class="ptr-arrow ti ti-arrow-down" id="ptr-arrow"></i>
+      <span id="ptr-label">Puxe para atualizar</span>
+    </div>
+    <div class="loader"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Input oculto para seleção de arquivos -->
+  <input type="file" id="file-input" multiple accept="*/*"
+    style="display:none" onchange="onFilesSelected(this.files)">
+  <div class="cotacao-subnav" id="cotacao-subnav" style="display:none"></div>
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+
+<button class="fab" id="fab" onclick="abrirNovo()" style="display:none">
+  <i class="ti ti-plus"></i>
+</button>
+
+<div class="modal-ov" id="modal-card" onclick="if(event.target===this)fecharModal()">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-hd">
+      <span class="modal-hd-title" id="modal-title">Novo Card</span>
+      <button id="btn-del" class="btn-del" onclick="excluirCard()" style="display:none">
+        <i class="ti ti-trash" style="font-size:13px"></i>
+      </button>
+      <button class="btn-icon" onclick="fecharModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" id="btn-save" onclick="salvarCard()">
+        <i class="ti ti-device-floppy" style="font-size:13px"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── TEMA CLARO/ESCURO — mesma regra usada em todo o sistema desktop:
+   lê localStorage.barretos_tema, aplica a classe no body, e propaga
+   pra qualquer iframe ativo (Cotação/Financeiro) via postMessage. ── */
+(function(){
+  var t = localStorage.getItem('barretos_tema') || 'escuro';
+  if (t === 'claro') document.body.classList.add('tema-claro');
+  document.addEventListener('DOMContentLoaded', function(){
+    var ico = document.getElementById('ico-tema');
+    if (ico) ico.className = (t === 'claro') ? 'ti ti-sun' : 'ti ti-moon';
+  });
+})();
+
+function alternarTema(){
+  var claro = document.body.classList.toggle('tema-claro');
+  var novoTema = claro ? 'claro' : 'escuro';
+  localStorage.setItem('barretos_tema', novoTema);
+  var ico = document.getElementById('ico-tema');
+  if (ico) ico.className = claro ? 'ti ti-sun' : 'ti ti-moon';
+  broadcastTemaMobile(novoTema);
+}
+
+function broadcastTemaMobile(tema){
+  document.querySelectorAll('iframe').forEach(function(f){
+    try { f.contentWindow.postMessage({ type:'barretos_tema', tema:tema }, '*'); } catch(e) {}
+  });
+}
+
+// sessionStorage não é compartilhado entre iframe e página pai (mesmo em
+// mesma origem) — copia manualmente pros módulos que dependem dela, igual
+// ao onFrameLoad() do shell.html no desktop.
+function propagarAuthParaFrame_(frameEl){
+  try {
+    var fw = frameEl.contentWindow;
+    ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k){
+      var sv = sessionStorage.getItem(k); if (sv) fw.sessionStorage.setItem(k, sv);
+      var lv = localStorage.getItem(k);   if (lv) fw.localStorage.setItem(k, lv);
+    });
+  } catch(e) {}
+}
+function onFrameLoadMobile(frameEl, tema){
+  propagarAuthParaFrame_(frameEl);
+  setTimeout(function(){ broadcastTemaMobile(tema||(localStorage.getItem('barretos_tema')||'escuro')); }, 250);
+}
+
+// URL_KANBANS agora só é usado pros anexos (upload/lista/exclusão no
+// Google Drive) — os dados do card em si vêm do Supabase, via API_BASE
+// abaixo (mesmo backend do desktop, ver barretos.html/goncalves.html/...).
+var URL_KANBANS  = 'https://script.google.com/macros/s/AKfycbwkX0XLYMnWIKa9SsS1oSv9E2hhGYjKi5Fp2cPHA_J_X1jg7NiGVT4YfdFAjZ3Ps2C4Qg/exec';
+
+var API_BASE = 'https://barretos-backend.onrender.com/api';
+var SUPABASE_URL      = 'https://qjwobkpgqmaqisphwonl.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_c4MrJXB6nTHY0a5ShAFRaQ_Jc4qDdPr';
+
+function getAuthToken()    { return localStorage.getItem('barretos_auth_token'); }
+function getRefreshToken() { return localStorage.getItem('barretos_auth_refresh'); }
+
+async function tentarRenovarToken() {
+  var refresh = getRefreshToken();
+  if (!refresh) return false;
+  var agora = Date.now();
+  var ultimaRenovacao = parseInt(localStorage.getItem('barretos_auth_renovado_em') || '0', 10);
+  if (agora - ultimaRenovacao < 5000) return !!getAuthToken();
+  try {
+    var r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    if (!r.ok) return false;
+    var j = await r.json();
+    localStorage.setItem('barretos_auth_token', j.access_token);
+    localStorage.setItem('barretos_auth_refresh', j.refresh_token);
+    localStorage.setItem('barretos_auth_renovado_em', String(Date.now()));
+    return true;
+  } catch (e) { return false; }
+}
+
+// Todas as chamadas ao /api/kanban (cards de verdade, no Supabase) passam
+// por aqui — vai sempre com o token de login e tenta renovar sozinho se
+// já tiver expirado. Anexos continuam no Apps Script (URL_KANBANS acima).
+async function apiFetch(url, options) {
+  options = options || {};
+  var headers = Object.assign({}, options.headers, { Authorization: 'Bearer ' + getAuthToken() });
+  var res = await fetch(url, Object.assign({}, options, { headers: headers }));
+  if (res.status === 401) {
+    if (await tentarRenovarToken()) {
+      headers.Authorization = 'Bearer ' + getAuthToken();
+      res = await fetch(url, Object.assign({}, options, { headers: headers }));
+    }
+    if (res.status === 401) {
+      mostrarTelaSemAcesso();
+      throw new Error('Sessão expirada');
+    }
+  }
+  return res;
+}
+
+function mostrarTelaSemAcesso() {
+  ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k) {
+    sessionStorage.removeItem(k); localStorage.removeItem(k);
+  });
+  window.location.href = 'mobile_login.html';
+}
+
+/* ── Nova tentativa automática quando o backend está ocupado ──
+   O Kanban é o módulo com mais gente mexendo ao mesmo tempo — o Apps
+   Script agora devolve {success:false, ocupado:true} em vez de ficar
+   pendurado até travar (planilha ocupada por outra pessoa). Em vez de
+   mostrar erro na hora, espera um pouco e tenta de novo sozinho — na
+   prática, a maioria das vezes o usuário nem chega a perceber. */
+async function fetchComTentativas_(url, options, maxTentativas){
+  maxTentativas = maxTentativas || 3;
+  for(var tentativa = 1; tentativa <= maxTentativas; tentativa++){
+    try{
+      var res = await fetch(url, options);
+      var json = await res.json();
+      if(json && json.ocupado && tentativa < maxTentativas){
+        await new Promise(function(r){ setTimeout(r, 2500); });
+        continue;
+      }
+      return json;
+    }catch(e){
+      if(tentativa >= maxTentativas) throw e;
+      await new Promise(function(r){ setTimeout(r, 2500); });
+    }
+  }
+}
+
+var ABAS_CONFIG  = [{"key": "kanban_pin", "aba": "PINHEIRO", "pfx": "P", "label": "Pinheiro", "color": "#F97316"}, {"key": "kanban_inf", "aba": "INFRA", "pfx": "S", "label": "Infra", "color": "#14B8A6"}, {"key": "kanban_bar", "aba": "BARRETO'S", "pfx": "B", "label": "Barreto's", "color": "#F5B800"}, {"key": "kanban_gon", "aba": "GONCALVES", "pfx": "G", "label": "Gonçalves", "color": "#3B82F6"}];
+
+// Converte um card do formato interno (chaves da tela) pro formato da
+// API (snake_case) — mesmo mapeamento usado em barretos.html/goncalves.html/
+// infra.html/pinheiro.html, uniforme pras 4 empresas (não tem mais tradução
+// por aba: o Supabase usa as mesmas colunas pra todo mundo).
+function mapearParaApi_(dados) {
+  var mapa = {
+    "DT CODIGO":"codigo","Resumo":"resumo","TITULO":"titulo","Status":"status","ACOMPANHAMENTO":"acompanhamento",
+    "CLIENTE":"cliente","CONTATO CLIENTE":"contato_cliente","CNPJ TOMADOR":"cnpj_tomador","VENDEDOR":"vendedor",
+    "DATA DA COLETA":"data_coleta","PREVISÃO DE ENTREGA":"previsao_entrega",
+    "CTE":"cte","NF":"nf","DATA DA ENTREGA":"data_entrega",
+    "CIDADE ORIGEM":"cidade_origem","UF ORIGEM":"uf_origem","CIDADE DESTINO":"cidade_destino","UF DESTINO":"uf_destino",
+    "FRETE COBRADO":"frete_cobrado","FRETE PAGO":"frete_pago","CUSTO OPERACIONAL TOTAL":"custo_operacional_total","ADIANTAMENTO":"adiantamento",
+    "TIPO DE VEICULO":"tipo_veiculo","MOTORISTA":"motorista","TELEFONE MOTORISTA":"telefone_motorista","GERENCIAMENTO":"gerenciamento",
+    "TITULAR DA CONTA":"titular_conta","TIPO CHAVE PIX":"tipo_chave_pix","CHAVE PIX":"chave_pix","BANCO":"banco",
+    "OBSERVACAO":"observacao","VALE PEDAGIO":"vale_pedagio"
+  };
+  var out = {};
+  Object.keys(mapa).forEach(function(k) {
+    if (dados[k] === undefined) return;
+    out[mapa[k]] = dados[k];
+  });
+  return out;
+}
+// Converte uma linha da API (snake_case) de volta pro formato interno
+// (chaves usadas pela tela) — usado só na leitura.
+function mapearDoApi_(row) {
+  var mapaInverso = {
+    codigo:"DT CODIGO", resumo:"Resumo", titulo:"TITULO", status:"Status", acompanhamento:"ACOMPANHAMENTO",
+    cliente:"CLIENTE", contato_cliente:"CONTATO CLIENTE", cnpj_tomador:"CNPJ TOMADOR", vendedor:"VENDEDOR",
+    data_coleta:"DATA DA COLETA", previsao_entrega:"PREVISÃO DE ENTREGA",
+    cte:"CTE", nf:"NF", data_entrega:"DATA DA ENTREGA",
+    cidade_origem:"CIDADE ORIGEM", uf_origem:"UF ORIGEM", cidade_destino:"CIDADE DESTINO", uf_destino:"UF DESTINO",
+    frete_cobrado:"FRETE COBRADO", frete_pago:"FRETE PAGO", custo_operacional_total:"CUSTO OPERACIONAL TOTAL", adiantamento:"ADIANTAMENTO",
+    tipo_veiculo:"TIPO DE VEICULO", motorista:"MOTORISTA", telefone_motorista:"TELEFONE MOTORISTA", gerenciamento:"GERENCIAMENTO",
+    titular_conta:"TITULAR DA CONTA", tipo_chave_pix:"TIPO CHAVE PIX", chave_pix:"CHAVE PIX", banco:"BANCO",
+    observacao:"OBSERVACAO", cotacao_numero:"COTAÇÃO", vale_pedagio:"VALE PEDAGIO"
+  };
+  var out = {};
+  Object.keys(mapaInverso).forEach(function(campo) {
+    var chave = mapaInverso[campo];
+    out[chave] = row[campo] || '';
+  });
+  out["Chave"] = out["DT CODIGO"];
+  return out;
+}
+
+var COLUNAS_STATUS = ["OPERACIONAL", "COLETA", "AGUARDANDO MANIFESTO", "FATURADO", "MANIFESTOS", "FINALIZADO"];
+var CAMPOS_CARD  = [
+  /* ── Identificação ── */
+  {"key": "TITULO",                  "label": "Título do Card",               "type": "text",       "section": "Identificação"},
+  {"key": "Status",                  "label": "Status",                       "type": "select",     "section": "Identificação"},
+  /* ── Operação ── */
+  {"key": "VENDEDOR",                "label": "Vendedor",                     "type": "text",       "section": "Operação"},
+  {"key": "CLIENTE",                 "label": "Cliente",                      "type": "text",       "section": "Operação"},
+  {"key": "CNPJ TOMADOR",            "label": "CNPJ Tomador",                 "type": "text",       "section": "Operação"},
+  {"key": "CONTATO CLIENTE",         "label": "Contato Cliente",              "type": "text",       "section": "Operação"},
+  {"key": "ACOMPANHAMENTO",          "label": "Acompanhamento",               "type": "textarea",   "section": "Operação"},
+  {"key": "DATA DA COLETA",          "label": "Data da Coleta",               "type": "date",       "section": "Operação"},
+  {"key": "PREVISÃO DE ENTREGA",     "label": "Previsão de Entrega",          "type": "date",       "section": "Operação"},
+  {"key": "DATA DA ENTREGA",         "label": "Data da Entrega (real)",       "type": "date",       "section": "Operação"},
+  /* ── Rota ── */
+  {"key": "CIDADE ORIGEM",           "label": "Cidade Origem",                "type": "text",       "section": "Rota"},
+  {"key": "UF ORIGEM",               "label": "UF Origem",                    "type": "text",       "section": "Rota"},
+  {"key": "CIDADE DESTINO",          "label": "Cidade Destino",               "type": "text",       "section": "Rota"},
+  {"key": "UF DESTINO",              "label": "UF Destino",                   "type": "text",       "section": "Rota"},
+  /* ── Transporte ── */
+  {"key": "TIPO DE VEICULO",         "label": "Tipo de Veículo",              "type": "text",       "section": "Transporte"},
+  {"key": "MOTORISTA",               "label": "Motorista",                    "type": "text",       "section": "Transporte"},
+  {"key": "TELEFONE MOTORISTA",      "label": "Tel. Motorista",               "type": "tel",        "section": "Transporte"},
+  /* ── Financeiro ── */
+  {"key": "FRETE COBRADO",           "label": "Frete Cliente (R$)",           "type": "text",       "section": "Financeiro"},
+  {"key": "FRETE PAGO",              "label": "Frete Motorista (R$)",         "type": "text",       "section": "Financeiro"},
+  {"key": "CUSTO OPERACIONAL TOTAL", "label": "Custo Total Operacional (R$)", "type": "text",       "section": "Financeiro"},
+  {"key": "ADIANTAMENTO",            "label": "Adiantamento (%)",             "type": "percent",    "section": "Financeiro"},
+  {"key": "GERENCIAMENTO",           "label": "Gerenciamento",                "type": "text",       "section": "Financeiro"},
+  {"key": "CTE",                     "label": "CTE",                          "type": "text",       "section": "Fiscal"},
+  {"key": "NF",                      "label": "NF",                           "type": "text",       "section": "Fiscal"},
+  {"key": "VALE PEDAGIO",            "label": "Vale Pedágio",                 "type": "text",       "section": "Fiscal"},
+  /* ── Pagamento ── */
+  {"key": "TITULAR DA CONTA",        "label": "Titular da Conta",             "type": "text",       "section": "Pagamento"},
+  {"key": "TIPO CHAVE PIX",          "label": "Tipo de Chave PIX",            "type": "select-pix", "section": "Pagamento"},
+  {"key": "CHAVE PIX",               "label": "Chave PIX",                    "type": "text",       "section": "Pagamento"},
+  {"key": "BANCO",                   "label": "Banco",                        "type": "text",       "section": "Pagamento"},
+  /* ── Obs ── */
+  {"key": "OBSERVACAO",              "label": "Observação",                    "type": "textarea",   "section": "Obs"}
+];
+
+var currentTab = null, currentCol = COLUNAS_STATUS[0];
+var rawCards = {}, editCard = null, user = null;
+var allowedKeys = null, searchTerm = '';
+var cardAttachments = []; // anexos do card em edição
+
+document.addEventListener('DOMContentLoaded', function() {
+  var raw = sessionStorage.getItem('barretos_user') || localStorage.getItem('barretos_user');
+  if (!raw || !getAuthToken()) { window.location.href = 'mobile_login.html'; return; }
+  try { user = JSON.parse(raw); } catch(e) { window.location.href = 'mobile_login.html'; return; }
+  document.getElementById('top-user').textContent = (user.nome||'').split(' ')[0].toUpperCase();
+  var sideName = document.getElementById('sidebar-user-name');
+  if (sideName) sideName.textContent = user.nome || '';
+  initPullToRefresh();
+  fetchPermissoes();
+});
+
+/* ── Pull to Refresh ── */
+function initPullToRefresh() {
+  var content  = document.getElementById('content');
+  var ptr      = document.getElementById('ptr-indicator');
+  var arrow    = document.getElementById('ptr-arrow');
+  var lbl      = document.getElementById('ptr-label');
+  var startY   = 0, pulling = false, triggered = false;
+  var THRESHOLD = 70;
+
+  content.addEventListener('touchstart', function(e) {
+    // Só ativa se estiver no topo da área de cards
+    var area = document.getElementById('cards-area');
+    if (area && area.scrollTop > 0) return;
+    startY   = e.touches[0].clientY;
+    pulling  = true;
+    triggered = false;
+  }, {passive: true});
+
+  content.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { ptr.classList.remove('visible'); return; }
+    ptr.classList.add('visible');
+    if (dy >= THRESHOLD && !triggered) {
+      arrow.className = 'ptr-arrow ti ti-arrow-down ready';
+      lbl.textContent = 'Solte para atualizar';
+    } else if (dy < THRESHOLD) {
+      arrow.className = 'ptr-arrow ti ti-arrow-down';
+      lbl.textContent = 'Puxe para atualizar';
+    }
+  }, {passive: true});
+
+  content.addEventListener('touchend', function(e) {
+    if (!pulling) return;
+    pulling = false;
+    var dy = e.changedTouches[0].clientY - startY;
+    if (dy >= THRESHOLD && currentTab) {
+      // Mostra spinner e recarrega
+      arrow.style.display = 'none';
+      lbl.innerHTML = '<span class="spinner"></span> Atualizando…';
+      renderKanban(currentTab).then(function() {
+        ptr.classList.remove('visible');
+        arrow.style.display = '';
+        lbl.textContent = 'Puxe para atualizar';
+        arrow.className = 'ptr-arrow ti ti-arrow-down';
+      });
+    } else {
+      ptr.classList.remove('visible');
+    }
+  }, {passive: true});
+}
+
+/* ── Anexos ── */
+function onFilesSelected(files) {
+  // Resolve a chave real: card em edição OU DT CODIGO digitado no formulário
+  var chave = '';
+  if (editCard && editCard.card['DT CODIGO']) {
+    chave = editCard.card['DT CODIGO'];
+  } else {
+    var dtEl = document.getElementById('cf-DT CODIGO');
+    chave = dtEl ? dtEl.value.trim().toUpperCase() : '';
+  }
+  if (!chave) {
+    alert('⚠ Preencha o DT CODIGO antes de anexar arquivos.');
+    document.getElementById('file-input').value = '';
+    return;
+  }
+
+  var btn = document.querySelector('.btn-attach');
+  var filesArray = Array.prototype.slice.call(files);
+  var total = filesArray.length;
+  var erros = [];
+
+  // Lê um arquivo como base64 (Promise)
+  function lerBase64(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+      reader.onerror = function() { reject(new Error('Falha ao ler ' + file.name)); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Envia um arquivo por vez (sequencial) — Apps Script não suporta paralelo
+  (async function enviarSequencial() {
+    for (var i = 0; i < filesArray.length; i++) {
+      var file = filesArray[i];
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML =
+          '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span>'
+          + 'Enviando ' + (i + 1) + ' de ' + total + '…';
+      }
+      try {
+        var base64 = await lerBase64(file);
+        var j = await fetchComTentativas_(URL_KANBANS, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'upload_anexo',
+            chave: chave,
+            nome: file.name,
+            data: base64,
+            mimeType: file.type || 'application/octet-stream'
+          })
+        });
+        if (j.success && j.anexo) {
+          cardAttachments.push(j.anexo);
+        } else {
+          erros.push(file.name);
+        }
+      } catch (err) {
+        erros.push(file.name);
+      }
+      renderAttachments();
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-paperclip" style="font-size:16px"></i> Anexar documento';
+    }
+    if (erros.length) {
+      alert('⚠ Falha ao enviar ' + erros.length + ' arquivo(s):\n' + erros.join('\n'));
+    }
+  })();
+
+  document.getElementById('file-input').value = '';
+}
+
+function carregarAnexos(chave) {
+  if (!chave) return;
+  fetchComTentativas_(URL_KANBANS + '?action=anexos&chave=' + encodeURIComponent(chave))
+    .then(function(j) {
+      if (j.success) {
+        cardAttachments = j.anexos || [];
+        renderAttachments();
+      }
+    })
+    .catch(function() {});
+}
+
+function renderAttachments() {
+  var container = document.getElementById('attach-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (cardAttachments.length > 0) {
+    var list = document.createElement('div'); list.className = 'attach-list';
+    cardAttachments.forEach(function(a, idx) {
+      var row = document.createElement('div'); row.className = 'attach-item';
+      var icon = fileIcon(a.nome || a.name || '');
+      var nome = escHtml(a.nome || a.name || 'arquivo');
+      var size = a.size ? formatBytes(a.size) : '';
+      var url = a.url || '';
+      row.innerHTML =
+        '<a href="' + url + '" target="_blank" style="display:flex;align-items:center;gap:10px;flex:1;text-decoration:none;color:inherit;">' +
+        '<i class="ti ti-' + icon + ' attach-icon"></i>' +
+        '<span class="attach-name">' + nome + '</span>' +
+        (size ? '<span class="attach-size">' + size + '</span>' : '') +
+        '</a>' +
+        '<button class="attach-del" onclick="removeAttach(' + idx + ')" title="Remover">' +
+        '<i class="ti ti-x"></i></button>';
+      list.appendChild(row);
+    });
+    container.appendChild(list);
+  }
+
+  var btn = document.createElement('button');
+  btn.className = 'btn-attach';
+  btn.type = 'button';
+  btn.innerHTML = '<i class="ti ti-paperclip" style="font-size:16px"></i> Anexar documento';
+  btn.onclick = function() { document.getElementById('file-input').click(); };
+  container.appendChild(btn);
+}
+
+function removeAttach(idx) {
+  var anexo = cardAttachments[idx];
+  if (anexo && anexo.id) {
+    fetchComTentativas_(URL_KANBANS, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'excluir_anexo', fileId: anexo.id })
+    }).catch(function() {});
+  }
+  cardAttachments.splice(idx, 1);
+  renderAttachments();
+}
+
+function fileIcon(name) {
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  if (['pdf'].includes(ext)) return 'file-type-pdf';
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return 'photo';
+  if (['doc','docx'].includes(ext)) return 'file-type-doc';
+  if (['xls','xlsx','csv'].includes(ext)) return 'file-spreadsheet';
+  if (['zip','rar','7z'].includes(ext)) return 'file-zip';
+  return 'file';
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+
+
+function fetchPermissoes() {
+  // Permissões já vieram do banco no momento do login (mobile_login.html),
+  // salvas em barretos_permissoes — mesmo padrão do shell desktop.
+  try {
+    var perms = JSON.parse(localStorage.getItem('barretos_permissoes') || '[]');
+    if (Array.isArray(perms) && perms.length) allowedKeys = perms;
+  } catch(e) {}
+  buildNav();
+}
+
+// ── Estrutura única de navegação — alimenta o menu de baixo (lista plana,
+// rolável) e o sidebar novo (agrupado por seção, igual ao padrão do
+// desktop). Kanbans entram dinamicamente a partir de ABAS_CONFIG.
+function getNavSections() {
+  var kanbanItems = ABAS_CONFIG
+    .filter(function(a) { return !allowedKeys || allowedKeys.indexOf(a.key) !== -1; })
+    .map(function(a) { return { key: a.key, label: a.label, icon: 'ti-columns' }; });
+  return [
+    { section: null, items: [
+      { key: 'inicio', label: 'Início', icon: 'ti-home', always: true }
+    ]},
+    { section: 'Geral', items: [
+      { key: 'calendario', label: 'Calendário', icon: 'ti-calendar', always: true }
+    ]},
+    { section: 'Comercial', items: [
+      { key: 'cotacao', label: 'Cotação', icon: 'ti-calculator' }
+    ]},
+    { section: 'Financeiro', items: [
+      { key: 'financeiro', label: 'Financeiro', icon: 'ti-cash' },
+      { key: 'faturamento', label: 'Faturamento', icon: 'ti-file-invoice' },
+      { key: 'conciliacao', label: 'Conciliação', icon: 'ti-building-bank' }
+    ]},
+    { section: 'Operacional', items: [
+      { key: 'frota', label: 'Frota', icon: 'ti-car' }
+    ].concat(kanbanItems) }
+  ];
+}
+
+function itemVisivel(item) {
+  return item.always || !allowedKeys || allowedKeys.indexOf(item.key) !== -1;
+}
+
+function buildNav() {
+  var sections = getNavSections();
+
+  // ── Menu de baixo: lista plana, rolável na horizontal ──
+  var nav = document.getElementById('bottom-nav');
+  nav.innerHTML = '';
+  sections.forEach(function(sec) {
+    sec.items.filter(itemVisivel).forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.className = 'nav-item'; btn.id = 'nav-' + item.key;
+      btn.innerHTML = '<i class="ti ' + item.icon + '"></i><span>' + item.label + '</span>';
+      btn.onclick = function() { switchTab(item.key); };
+      nav.appendChild(btn);
+    });
+  });
+
+  // ── Sidebar: agrupado por seção, igual ao padrão do desktop ──
+  var side = document.getElementById('sidebar-nav-body');
+  if (side) {
+    side.innerHTML = '';
+    sections.forEach(function(sec) {
+      var visibleItems = sec.items.filter(itemVisivel);
+      if (!visibleItems.length) return;
+      if (sec.section) {
+        var lbl = document.createElement('div');
+        lbl.className = 'sidebar-section-lbl';
+        lbl.textContent = sec.section;
+        side.appendChild(lbl);
+      }
+      visibleItems.forEach(function(item) {
+        var btn = document.createElement('button');
+        btn.className = 'sidebar-item'; btn.id = 'side-' + item.key;
+        btn.innerHTML = '<i class="ti ' + item.icon + '"></i><span>' + item.label + '</span>';
+        btn.onclick = function() { switchTab(item.key); toggleSidebarMobile(false); };
+        side.appendChild(btn);
+      });
+    });
+  }
+
+  switchTab('inicio');
+}
+
+function toggleSidebarMobile(forceOpen) {
+  var sb = document.getElementById('mobile-sidebar');
+  var bd = document.getElementById('sidebar-backdrop');
+  var abrir = forceOpen !== undefined ? forceOpen : !sb.classList.contains('open');
+  sb.classList.toggle('open', abrir);
+  bd.classList.toggle('open', abrir);
+}
+
+// Normaliza nome/login pra comparação tolerante (mesmo padrão do shell
+// desktop e da cotação): minúsculas, sem acento, pontuação vira espaço.
+function normNomeLogin_(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function contemTodosTokens_(base, tokens){
+  return tokens.every(function(t){ return base.indexOf(t) !== -1; });
+}
+function ehAprovadorMobile(){
+  var base = normNomeLogin_((user && user.nome)||'') + ' ' + normNomeLogin_((user && user.login)||'');
+  return contemTodosTokens_(base, ['filipe'])
+      || contemTodosTokens_(base, ['gabriel','pinheiro'])
+      || contemTodosTokens_(base, ['diego','florido']);
+}
+
+var _cotacaoSubTab = 'calc';
+function buildCotacaoSubnav(){
+  var nav = document.getElementById('cotacao-subnav');
+  var itens = [
+    { key:'calc', label:'Calculadora', icon:'ti-calculator' },
+    { key:'hist', label:'Histórico', icon:'ti-history' },
+    { key:'oc', label:'Ordem de Coleta', icon:'ti-clipboard-list' }
+  ];
+  if (ehAprovadorMobile()) itens.push({ key:'aprov', label:'Aprovação', icon:'ti-clipboard-check' });
+  nav.innerHTML = '';
+  itens.forEach(function(item){
+    var btn = document.createElement('button');
+    btn.className = 'cotacao-subnav-btn' + (item.key === _cotacaoSubTab ? ' active' : '');
+    btn.innerHTML = '<i class="ti ' + item.icon + '"></i>' + item.label;
+    btn.onclick = function(){
+      _cotacaoSubTab = item.key;
+      document.querySelectorAll('.cotacao-subnav-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var frame = document.querySelector('#content iframe');
+      if (frame) frame.contentWindow.postMessage({ type:'cotacao_switch_tab', tab:item.key }, '*');
+    };
+    nav.appendChild(btn);
+  });
+}
+
+function switchTab(key) {
+  currentTab = key;
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    el.classList.toggle('active', el.id === 'nav-' + key);
+  });
+  document.querySelectorAll('.sidebar-item').forEach(function(el) {
+    el.classList.toggle('active', el.id === 'side-' + key);
+  });
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === key; });
+  if (key === 'inicio') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Início';
+    document.getElementById('top-sub').textContent = 'visão geral do dia';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="inicio.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'calendario') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Calendário';
+    document.getElementById('top-sub').textContent = 'eventos e compromissos';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="calendario.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (aba) {
+    document.documentElement.style.setProperty('--accent', aba.color);
+    document.getElementById('top-title').textContent = aba.label;
+    document.getElementById('fab').style.display = 'flex';
+    renderKanban(key);
+  } else if (key === 'cotacao') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Cotação Comercial';
+    document.getElementById('top-sub').textContent = 'simulação de frete';
+    document.getElementById('fab').style.display = 'none';
+    _cotacaoSubTab = 'calc';
+    document.getElementById('content').innerHTML =
+      '<iframe src="cotacao_comercial.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'financeiro') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Financeiro';
+    document.getElementById('top-sub').textContent = 'contas a pagar e a receber';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="financeiro.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'conciliacao') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Conciliação Bancária';
+    document.getElementById('top-sub').textContent = 'extratos, conciliação e DRE';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="conciliacao_bancaria_mobile.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'faturamento') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Faturamento';
+    document.getElementById('top-sub').textContent = 'por CT-e';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="faturamento.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'frota') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Gestão da Frota';
+    document.getElementById('top-sub').textContent = 'veículos, motoristas e despesas';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="gestao_da_frota.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  }
+
+  // Subnav da Cotação (Calculadora/Histórico/OC/Aprovação) só aparece
+  // quando essa aba está ativa — substitui as abas que a própria
+  // cotação escondeu no mobile
+  var subnav = document.getElementById('cotacao-subnav');
+  if (key === 'cotacao') {
+    buildCotacaoSubnav();
+    subnav.style.display = 'flex';
+  } else {
+    subnav.style.display = 'none';
+  }
+}
+
+async function renderKanban(key) {
+  var content = document.getElementById('content');
+  content.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+  document.getElementById('top-sub').textContent = 'atualizando...';
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === key; });
+  if (!aba) return;
+  try {
+    var r = await apiFetch(API_BASE + '/kanban?empresa=' + encodeURIComponent(aba.aba));
+    var rows = await r.json();
+    if (r.ok) {
+      rawCards[key] = (rows || []).map(mapearDoApi_);
+      document.getElementById('top-sub').textContent = rawCards[key].length + ' cards';
+    } else {
+      document.getElementById('top-sub').textContent = 'erro ao carregar';
+    }
+  } catch(e) {
+    document.getElementById('top-sub').textContent = 'sem conexão';
+  }
+  paintKanban(key);
+}
+
+function paintKanban(key) {
+  if (currentTab !== key) return;
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === key; });
+  var content = document.getElementById('content');
+  content.innerHTML = '';
+
+  // Search bar — criado UMA VEZ, nunca re-criado
+  var sb = document.createElement('div'); sb.className = 'search-bar';
+  var si = document.createElement('i'); si.className = 'ti ti-search';
+  var sinp = document.createElement('input');
+  sinp.id = 'search-input';
+  sinp.placeholder = 'Buscar código, cliente...';
+  sinp.value = searchTerm;
+  sinp.setAttribute('autocomplete','off');
+  sinp.addEventListener('input', function() {
+    searchTerm = this.value;
+    paintCardsOnly(key);  // atualiza cards/abas SEM destruir o input
+  });
+  sb.appendChild(si); sb.appendChild(sinp);
+  content.appendChild(sb);
+
+  // Column tabs container
+  var ct = document.createElement('div'); ct.className = 'col-tabs'; ct.id = 'col-tabs';
+  content.appendChild(ct);
+
+  // Cards area container
+  var area = document.createElement('div'); area.className = 'cards-area'; area.id = 'cards-area';
+  content.appendChild(area);
+
+  // Preenche abas + cards
+  paintCardsOnly(key);
+}
+
+/* Atualiza abas e cards sem recriar o input de busca */
+function paintCardsOnly(key) {
+  if (currentTab !== key) return;
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === key; });
+  var cards = (rawCards[key] || []).filter(function(c) {
+    if (!searchTerm) return true;
+    var s = searchTerm.toLowerCase();
+    return (c['DT CODIGO']||'').toLowerCase().includes(s)
+      || (c['CLIENTE']||'').toLowerCase().includes(s)
+      || (c['Resumo']||'').toLowerCase().includes(s)
+      || (c['MOTORISTA']||'').toLowerCase().includes(s)
+      || (c['ACOMPANHAMENTO']||'').toLowerCase().includes(s)
+      || (c['TITULAR DA CONTA']||'').toLowerCase().includes(s);
+  });
+  var colCards = cards.filter(function(c) { return (c['Status']||'') === currentCol; });
+
+  // Atualiza abas
+  var ct = document.getElementById('col-tabs');
+  if (ct) {
+    ct.innerHTML = '';
+    COLUNAS_STATUS.forEach(function(col) {
+      var cnt = cards.filter(function(c) { return (c['Status']||'') === col; }).length;
+      var t = document.createElement('button');
+      t.className = 'col-tab' + (col === currentCol ? ' active' : '');
+      t.textContent = col + (cnt > 0 ? ' (' + cnt + ')' : '');
+      t.onclick = function() { currentCol = col; paintCardsOnly(key); };
+      ct.appendChild(t);
+    });
+  }
+
+  // Atualiza cards
+  var area = document.getElementById('cards-area');
+  if (!area) return;
+  area.innerHTML = '';
+  if (colCards.length === 0) {
+    area.innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-off"></i><p>Nenhum card em<br><b>' + escHtml(currentCol) + '</b></p></div>';
+  } else {
+    colCards.forEach(function(c) {
+      var div = document.createElement('div'); div.className = 'card-item';
+      div.style.setProperty('border-left-color', aba.color);
+      var resumo = c['TITULO'] || (c['Resumo']||'').split(' - ').slice(1).join(' - ') || '';
+      div.innerHTML =
+        '<div class="ci-code">' + escHtml(c['DT CODIGO']||'') + (c['CTE'] ? ' <span style="font-size:9px;font-weight:400;color:var(--txt-dim);letter-spacing:0">· CTE ' + escHtml(c['CTE']) + '</span>' : '') + '</div>'
+        + (resumo ? '<div class="ci-route"><i class="ti ti-route" style="font-size:9px"></i> ' + escHtml(resumo) + '</div>' : '')
+        + '<div class="ci-title">' + escHtml(c['CLIENTE']||'(sem cliente)') + '</div>'
+        + '<div class="ci-meta">'
+        + (c['VENDEDOR'] ? '<span class="ci-tag"><i class="ti ti-user" style="font-size:9px"></i>' + escHtml(c['VENDEDOR']) + '</span>' : '')
+        + (c['DATA DA COLETA'] ? '<span class="ci-tag"><i class="ti ti-calendar" style="font-size:9px"></i>' + escHtml(c['DATA DA COLETA']) + '</span>' : '')
+        + (c['MOTORISTA'] ? '<span class="ci-tag"><i class="ti ti-truck" style="font-size:9px"></i>' + escHtml(c['MOTORISTA']) + '</span>' : '')
+        + '</div><i class="ti ti-chevron-right ci-arrow"></i>';
+      div.onclick = function() { abrirEdicao(c, key); };
+      area.appendChild(div);
+    });
+  }
+}
+
+/* ── Geração e validação do DT CODIGO ── */
+
+function gerarProximoCodigo(tabKey) {
+  var aba  = ABAS_CONFIG.find(function(a) { return a.key === tabKey; });
+  var pfx  = aba ? aba.pfx : 'X';
+  var now  = new Date();
+  var ano  = String(now.getFullYear()).slice(-2);       // "26"
+  var mes  = String(now.getMonth() + 1);               // "6" (sem zero à esquerda)
+  var prefixoMes = pfx + ano + mes;                    // ex: "S266"
+
+  // Pega TODOS os cards de TODAS as abas carregadas para garantir unicidade global
+  var todosCodigos = [];
+  Object.keys(rawCards).forEach(function(k) {
+    (rawCards[k] || []).forEach(function(c) {
+      var cod = (c['DT CODIGO'] || '').toUpperCase().trim();
+      if (cod) todosCodigos.push(cod);
+    });
+  });
+
+  // Filtra apenas os que têm o prefixo do mês atual (ex: "S266")
+  var numeros = todosCodigos
+    .filter(function(cod) { return cod.startsWith(prefixoMes); })
+    .map(function(cod) {
+      var seq = parseInt(cod.slice(prefixoMes.length), 10);
+      return isNaN(seq) ? 0 : seq;
+    });
+
+  var proximo = numeros.length > 0 ? Math.max.apply(null, numeros) + 1 : 1;
+  var candidato = prefixoMes + String(proximo).padStart(2, '0');
+
+  // Garante que o candidato não existe em nenhuma aba (evita colisão)
+  while (todosCodigos.indexOf(candidato) !== -1) {
+    proximo++;
+    candidato = prefixoMes + String(proximo).padStart(2, '0');
+  }
+
+  return candidato;
+}
+
+function verificarDuplicidade(codigo, codigoOriginal) {
+  var alert = document.getElementById('dt-alert');
+  var input = document.getElementById('cf-DT CODIGO');
+  if (!alert || !input) return;
+  if (!codigo || codigo === codigoOriginal) {
+    alert.style.display = 'none';
+    input.style.borderColor = '';
+    return;
+  }
+  // Verifica em todos os kanbans carregados
+  var existe = false;
+  Object.keys(rawCards).forEach(function(k) {
+    (rawCards[k] || []).forEach(function(c) {
+      if ((c['DT CODIGO']||'').toUpperCase() === codigo.toUpperCase()) existe = true;
+    });
+  });
+  if (existe) {
+    alert.style.display = 'flex';
+    input.style.borderColor = '#EF4444';
+  } else {
+    alert.style.display = 'none';
+    input.style.borderColor = 'var(--green)';
+  }
+}
+
+function abrirNovo() {
+  editCard = null;
+  cardAttachments = [];
+  document.getElementById('modal-title').textContent = 'Novo Card';
+  document.getElementById('btn-del').style.display = 'none';
+
+  // Se ainda não carregou os cards da aba atual, carrega antes de abrir
+  if (!rawCards[currentTab]) {
+    var aba = ABAS_CONFIG.find(function(a) { return a.key === currentTab; });
+    if (aba) {
+      apiFetch(API_BASE + '/kanban?empresa=' + encodeURIComponent(aba.aba))
+        .then(function(r) { return r.json(); })
+        .then(function(rows) {
+          rawCards[currentTab] = (rows || []).map(mapearDoApi_);
+          renderModalBody({});
+          document.getElementById('modal-card').classList.add('open');
+        })
+        .catch(function() {
+          renderModalBody({});
+          document.getElementById('modal-card').classList.add('open');
+        });
+      return;
+    }
+  }
+
+  renderModalBody({});
+  document.getElementById('modal-card').classList.add('open');
+}
+
+function abrirEdicao(card, key) {
+  editCard = {card:card, key:key};
+  cardAttachments = [];
+  document.getElementById('modal-title').textContent = card['DT CODIGO'] || 'Editar Card';
+  document.getElementById('btn-del').style.display = 'block';
+  renderModalBody(card);
+  document.getElementById('modal-card').classList.add('open');
+  // Carrega anexos do Drive
+  carregarAnexos(card['DT CODIGO']);
+}
+
+function renderModalBody(data) {
+  var body = document.getElementById('modal-body'); body.innerHTML = '';
+
+  // ── DT CODIGO ──
+  var dtDiv = document.createElement('div'); dtDiv.className = 'mfield';
+  var dtLbl = document.createElement('label');
+  dtLbl.textContent = 'DT CODIGO';
+  dtDiv.appendChild(dtLbl);
+
+  var codigoAtual = data['DT CODIGO'] || '';
+
+  if (!codigoAtual && !editCard) {
+    codigoAtual = gerarProximoCodigo(currentTab);
+  }
+
+  // Campo DT CODIGO
+  var dtInput = document.createElement('input');
+  dtInput.type = 'text';
+  dtInput.id = 'cf-DT CODIGO';
+  dtInput.value = codigoAtual;
+  dtInput.setAttribute('autocomplete','off');
+  dtInput.setAttribute('maxlength','8');
+
+  // Alerta de duplicidade (só visível ao criar)
+  var dtAlert = document.createElement('div');
+  dtAlert.id = 'dt-alert';
+  dtAlert.style.cssText = 'margin-top:5px;font-size:11px;font-weight:700;color:#EF4444;align-items:center;gap:5px;';
+  dtAlert.style.display = 'none';
+  dtAlert.innerHTML = '<i class="ti ti-alert-triangle" style="font-size:13px"></i> CÓDIGO JÁ USADO — altere antes de salvar';
+
+  if (editCard) {
+    // Edição: código não pode ser alterado
+    dtInput.readOnly = true;
+    dtInput.style.cssText = 'font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-size:15px;opacity:.7;cursor:not-allowed;';
+  } else {
+    // Criação: editável com validação de duplicidade
+    dtInput.style.cssText = 'font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-size:15px;';
+    dtInput.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      verificarDuplicidade(this.value, '');
+    });
+  }
+
+  dtDiv.appendChild(dtInput);
+  dtDiv.appendChild(dtAlert);
+  body.appendChild(dtDiv);
+
+  // Ao criar: verifica se código gerado já existe
+  if (!editCard) {
+    verificarDuplicidade(codigoAtual, '');
+  }
+
+
+  // ── Demais campos agrupados por seção ──
+  var currentSection = '';
+  CAMPOS_CARD.forEach(function(f) {
+    // Separador de seção
+    if (f.section && f.section !== currentSection) {
+      currentSection = f.section;
+      var sep = document.createElement('div');
+      sep.style.cssText = 'margin:16px 0 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px;';
+      sep.innerHTML = '<i class="ti ti-' + sectionIcon(f.section) + '" style="font-size:12px"></i>' + f.section
+        + '<span style="flex:1;height:1px;background:var(--border);margin-left:4px"></span>';
+      body.appendChild(sep);
+    }
+
+    var div = document.createElement('div'); div.className = 'mfield';
+    var lbl = document.createElement('label'); lbl.textContent = f.label;
+    div.appendChild(lbl);
+    var inp;
+
+    if (f.type === 'select') {
+      inp = document.createElement('select'); inp.id = 'cf-' + f.key;
+      COLUNAS_STATUS.forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
+        if ((data[f.key]||COLUNAS_STATUS[0]) === o) opt.selected = true;
+        inp.appendChild(opt);
+      });
+    } else if (f.type === 'select-pix') {
+      inp = document.createElement('select'); inp.id = 'cf-' + f.key;
+      ['','CPF','CNPJ','Telefone','E-mail','Chave aleatória'].forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
+        if ((data[f.key]||'') === o) opt.selected = true;
+        inp.appendChild(opt);
+      });
+    } else if (f.type === 'percent') {
+      var pw = document.createElement('div');
+      pw.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      inp = document.createElement('input'); inp.type = 'text';
+      inp.id = 'cf-' + f.key; inp.value = data[f.key]||'';
+      inp.style.flex = '1';
+      inp.placeholder = '0';
+      inp.oninput = function() { this.value = this.value.replace(/[^0-9.,]/g,''); };
+      var pct = document.createElement('span');
+      pct.textContent = '%';
+      pct.style.cssText = 'font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;';
+      pw.appendChild(inp); pw.appendChild(pct);
+      div.appendChild(lbl); div.appendChild(pw); body.appendChild(div);
+      return; // já appended
+    } else if (f.type === 'textarea') {
+      inp = document.createElement('textarea'); inp.id = 'cf-' + f.key; inp.value = data[f.key]||'';
+    } else {
+      inp = document.createElement('input'); inp.type = f.type||'text';
+      inp.id = 'cf-' + f.key; inp.value = data[f.key]||'';
+    }
+    div.appendChild(inp); body.appendChild(div);
+  });
+
+  // ── Seção Anexos ──
+  var sepAnex = document.createElement('div');
+  sepAnex.style.cssText = 'margin:16px 0 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px;';
+  sepAnex.innerHTML = '<i class="ti ti-paperclip" style="font-size:12px"></i>Documentos<span style="flex:1;height:1px;background:var(--border);margin-left:4px"></span>';
+  body.appendChild(sepAnex);
+
+  var attachDiv = document.createElement('div');
+  attachDiv.id = 'attach-container';
+  body.appendChild(attachDiv);
+  renderAttachments();
+}
+
+function sectionIcon(s) {
+  var m = {
+    'Identificação':'tag','Operação':'clipboard-list','Rota':'route',
+    'Transporte':'truck','Financeiro':'currency-dollar','Fiscal':'file-invoice','Pagamento':'qrcode','Obs':'notes'
+  };
+  return m[s] || 'circle';
+}
+
+function fecharModal() {
+  document.getElementById('modal-card').classList.remove('open');
+  editCard = null;
+  cardAttachments = [];
+}
+
+async function salvarCard() {
+  // Bloqueia duplicidade APENAS ao criar card novo (não ao editar)
+  if (!editCard) {
+    var dtAlert = document.getElementById('dt-alert');
+    if (dtAlert && dtAlert.style.display === 'flex') {
+      alert('⚠ CÓDIGO JÁ USADO — altere o DT CODIGO antes de salvar.');
+      return;
+    }
+  }
+
+  var btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px"></span>Salvando…';
+
+  // Monta objeto de dados: DT CODIGO + todos os campos do card
+  var dados = {};
+
+  // DT CODIGO — vem do input editável
+  var dtEl = document.getElementById('cf-DT CODIGO');
+  if (dtEl) dados['DT CODIGO'] = dtEl.value.trim().toUpperCase();
+
+  // Demais campos (CAMPOS_CARD não inclui DT CODIGO, então sem duplicata)
+  CAMPOS_CARD.forEach(function(f) {
+    var el = document.getElementById('cf-' + f.key);
+    if (el) dados[f.key] = el.value;
+  });
+
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === currentTab; });
+  var payloadApi = mapearParaApi_(dados);
+
+  try {
+    var r = editCard
+      ? await apiFetch(API_BASE + '/kanban/' + encodeURIComponent(aba.aba) + '/' + encodeURIComponent(editCard.card['DT CODIGO']), {
+          method: 'PUT',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payloadApi),
+        })
+      : await apiFetch(API_BASE + '/kanban', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(Object.assign({empresa: aba.aba}, payloadApi)),
+        });
+    var j = await r.json();
+    if (r.ok) { fecharModal(); await renderKanban(currentTab); }
+    else alert('Erro: ' + (j.error || 'desconhecido'));
+  } catch(e) { alert('Erro de conexão: ' + e.message); }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-device-floppy" style="font-size:13px"></i> Salvar';
+}
+
+async function excluirCard() {
+  if (!editCard || !confirm('Excluir este card?')) return;
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === editCard.key; });
+  var chaveValor = editCard.card['DT CODIGO'];
+  try {
+    var r = await apiFetch(API_BASE + '/kanban/' + encodeURIComponent(aba.aba) + '/' + encodeURIComponent(chaveValor), {method: 'DELETE'});
+    if (r.ok) { fecharModal(); await renderKanban(currentTab); }
+    else { var j = await r.json().catch(function(){return {};}); alert('Erro: ' + (j.error||'desconhecido')); }
+  } catch(e) { alert('Erro de conexão.'); }
+}
+
+function logout() {
+  if (!confirm('Encerrar sessão?')) return;
+  ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k) {
+    sessionStorage.removeItem(k); localStorage.removeItem(k);
+  });
+  window.location.href = 'mobile_login.html';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
