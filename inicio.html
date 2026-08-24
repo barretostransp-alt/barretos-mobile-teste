@@ -105,6 +105,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'DM Sans
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── MOBILE (sempre ativo — este arquivo só roda dentro do iframe do app mobile) ── */
+.page{display:block;height:auto;min-height:100vh;padding:12px;overflow:visible}
+.col-main,.col-side{overflow:visible;height:auto;display:block}
+.col-main > *{margin-bottom:14px}
+.col-side > *{margin-bottom:14px}
+.header{flex-wrap:wrap;row-gap:10px}
+.header img{height:34px}
+.header-saudacao{min-width:160px;flex-basis:100%;order:3}
+.header-nome{font-size:17px}
+.header-stats{width:100%;order:4;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hstat{min-width:0}
+.fat-wrap{max-height:280px}
 </style>
 
 <style>

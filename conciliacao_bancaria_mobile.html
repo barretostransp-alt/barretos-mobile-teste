@@ -304,6 +304,42 @@ tbody tr:last-child{border-bottom:none;}
   #sidebar.mobile-open{transform:translateX(0);box-shadow:12px 0 32px rgba(0,0,0,.4);}
   #topbar{gap:10px;}
 }
+
+/* ── ESTE ARQUIVO É DEDICADO AO CELULAR — as regras que em outros
+   arquivos vivem atrás de @media(max-width:...) aqui valem sempre, sem
+   depender de detectar a largura da tela (isso já causou dor de cabeça
+   quando embutido em iframe, então aqui nem arriscamos: mobile sempre).
+   Vem por ÚLTIMO no CSS de propósito, pra ganhar dos @media acima. ── */
+html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+#main { width: 100% !important; max-width: 100vw !important; margin-left: 0 !important; }
+#page-content { width: 100%; max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+#topbar { width: 100%; max-width: 100vw; box-sizing: border-box; }
+.kpi-grid{grid-template-columns:1fr 1fr;}
+#sidebar{transform:translateX(-100%);}
+#main{margin-left:0;}
+.g2,.g73,.g64,.g3{grid-template-columns:1fr;}
+#page-content{padding:14px;}
+.fr,.fr3{grid-template-columns:1fr;}
+.mobile-menu-btn{display:flex !important;align-items:center;}
+#topbar{gap:8px;padding:10px 14px;height:auto;min-height:56px;flex-wrap:wrap !important;row-gap:8px;}
+#topbar > div:nth-child(2){flex:1 1 100% !important;order:1;min-width:0;}
+.tb-title, .tb-crumb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-right{flex:1 1 100% !important;order:2;margin-left:0;flex-wrap:wrap !important;gap:8px;max-width:100%;}
+.tb-right .btn.ba{padding:8px 12px;}
+.tb-right, .frow, .tx-sel-bar { flex-wrap: wrap !important; }
+.fc, .fsel { max-width: 100% !important; box-sizing: border-box; }
+.mo{align-items:flex-end;padding:0;}
+.mw{width:100% !important;max-width:100% !important;border-radius:16px 16px 0 0;max-height:92vh;}
+#fl-grid{grid-template-columns:1fr !important;}
+.fm{grid-template-columns:1fr 1fr !important;}
+.formula-grid{grid-template-columns:1fr !important;}
+[style*="grid-template-columns:repeat(5,1fr)"]{grid-template-columns:1fr 1fr !important;}
+[style*="grid-template-columns:repeat(3,1fr)"]{grid-template-columns:1fr 1fr !important;}
+[style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr 1fr !important;}
+.mf{position:sticky;bottom:0;background:var(--white);flex-direction:column;padding-bottom:calc(16px + env(safe-area-inset-bottom,0));}
+.mf .btn{width:100%;justify-content:center;padding:11px 14px;}
+.cb0{overflow-x:auto;}
+input, select, textarea{font-size:16px !important;}
 </style>
 </head>
 <body>

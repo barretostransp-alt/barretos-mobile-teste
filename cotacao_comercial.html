@@ -1026,6 +1026,47 @@
 .refazer-badge.green{background:rgba(46,189,133,.15);color:#2EBD85;border-color:rgba(46,189,133,.3);}
 .refazer-badge.red{background:rgba(226,75,74,.15);color:#E24B4A;border-color:rgba(226,75,74,.3);}
 .refazer-error{color:#E24B4A;font-size:11px;margin-top:6px;display:none;}
+
+/* ── MOBILE (sempre ativo — este arquivo só roda dentro do iframe do app mobile) ── */
+.app-body { grid-template-columns: 1fr; height: auto; overflow: visible; }
+.panel-form { height: auto; overflow-y: visible; border-right: none; }
+.panel-result { display: none; height: auto; overflow-y: visible; }
+.panel-result.mob-visible { display: flex; }
+.panel-form.mob-hidden { display: none; }
+#mob-toggle-btn { display: flex !important; }
+.nav-tabs, .btn-config, .header-divider { display: none !important; }
+.app-header { padding: 0 14px; height: auto; min-height: 52px; flex-wrap: wrap; gap: 4px; }
+.logo-img { height: 30px; }
+.header-title { font-size: 13px; }
+.header-sub { font-size: 9px; }
+.field-grid, .field-grid-3, .override-grid { grid-template-columns: 1fr; }
+select, input[type=number], input[type=text], textarea { font-size: 16px !important; }
+body { overflow-y: auto; }
+.aprov-card-head { gap: 6px; }
+.det-grid { grid-template-columns: 1fr; }
+.hist-view, .oc-view, .aprov-view { padding: 14px; height: auto; min-height: calc(100vh - 52px); }
+.hist-stats-bar { flex-direction: column; align-items: stretch; gap: 14px; padding: 14px; }
+.donut-wrap { justify-content: center; }
+.hist-kpis { margin-left: 0; justify-content: space-around; gap: 10px; }
+.hist-kpi { min-width: 0; flex: 1; }
+.hist-kpi-val { font-size: 22px; }
+.hist-toolbar { gap: 8px; }
+.hist-toolbar h2 { flex: 1 1 100%; font-size: 14px; }
+.hist-filter-drop, .hist-filter-drop-btn { flex: 1 1 auto; }
+.hist-filter-drop-btn { justify-content: center; padding: 8px 10px; }
+.hist-drop-menu { left: 0; right: 0; min-width: 0; }
+.hist-filter-btn { padding: 8px 10px; flex: 1 1 auto; text-align: center; }
+#hist-busca-cliente { width: 100%; flex: 1 1 100%; }
+.oc-grid, .oc-grid-3 { grid-template-columns: 1fr; }
+.oc-panel { padding: 14px; }
+.oc-actions { flex-direction: column-reverse; width: 100%; }
+.oc-actions button { width: 100%; justify-content: center; }
+.btn-oc-pdf, .btn-oc-clear { padding: 12px 18px; }
+.oc-cnpj-row { flex-wrap: wrap; }
+#oc-view > div:first-child { flex-wrap: wrap; gap: 12px; }
+#oc-view > div:first-child > div:first-child { flex: 1 1 100%; }
+.aprov-meta { display: block; width: 100%; margin-top: 2px; }
+.aprov-actions button { flex: 1 1 auto; justify-content: center; }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
@@ -1531,6 +1572,16 @@ body.tema-claro .section-title,body.tema-claro .tab-label{color:#111827!importan
 
 </div>
 
+<!-- BOTÃO FLUTUANTE MOBILE: alterna entre formulário e resultado -->
+<button id="mob-toggle-btn" onclick="mobToggle()"
+  style="display:none;position:fixed;bottom:20px;right:16px;z-index:999;
+         background:var(--gold);color:#111;border:none;border-radius:30px;
+         padding:13px 20px;font-family:'Barlow',sans-serif;font-size:13px;
+         font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(245,184,0,.5);
+         align-items:center;gap:8px;letter-spacing:.03em;">
+  <i class="ti ti-calculator" id="mob-toggle-icon" style="font-size:16px"></i>
+  <span id="mob-toggle-label">Ver Resultado</span>
+</button>
 <!-- HISTORY VIEW -->
 <div id="hist-view" class="hist-view">
   <div class="hist-toolbar">
@@ -3000,10 +3051,66 @@ function switchTab(tab) {
   document.getElementById('oc-view').classList.toggle('active',   isOC);
   document.getElementById('aprov-view').classList.toggle('active', isAprov);
   document.querySelector('.app-body').classList.toggle('hist-active', isHist || isOC || isAprov);
+  // O toggle flutuante (form <-> resultado) só faz sentido na Calculadora —
+  // a regra CSS do mobile usa !important, então o JS precisa usar
+  // setProperty(...,'important') pra conseguir esconder de fato.
+  const mobBtn = document.getElementById('mob-toggle-btn');
+  if (mobBtn) {
+    if (isCalc) mobBtn.style.removeProperty('display');
+    else mobBtn.style.setProperty('display', 'none', 'important');
+  }
   if (isHist) loadHistory();
   if (isOC) initOC();
   if (isAprov) { loadHistory().then(renderAprovPanel); }
 }
+
+/* ---- NAVEGAÇÃO VINDA DE FORA (mobile.html) ----
+   No celular, as abas Calculadora/Histórico/Ordem de Coleta/Aprovação
+   ficam escondidas aqui dentro (ver CSS acima) e passam a ser controladas
+   por uma barrinha no shell mobile, que manda essa mensagem pra trocar
+   de aba. A aba "aprov" só é aceita se o usuário logado for realmente
+   um dos aprovadores — preserva a mesma regra de acesso de sempre. */
+window.addEventListener('message', function(ev){
+  if (!ev.data || ev.data.type !== 'cotacao_switch_tab') return;
+  var tab = ev.data.tab;
+  if (tab === 'aprov' && !ehAprovador(usuarioLogadoAtual())) return;
+  if (['calc','hist','oc','aprov'].indexOf(tab) !== -1) switchTab(tab);
+});
+
+/* ---- TOGGLE MOBILE: alterna form <-> resultado ---- */
+let _mobShowingResult = false;
+function mobToggle() {
+  const form   = document.querySelector('.panel-form');
+  const result = document.getElementById('panel-result');
+  const icon   = document.getElementById('mob-toggle-icon');
+  const label  = document.getElementById('mob-toggle-label');
+  _mobShowingResult = !_mobShowingResult;
+  if (_mobShowingResult) {
+    form.classList.add('mob-hidden');
+    result.classList.add('mob-visible');
+    icon.className  = 'ti ti-arrow-left';
+    label.textContent = 'Voltar ao Formulário';
+    window.scrollTo(0, 0);
+  } else {
+    form.classList.remove('mob-hidden');
+    result.classList.remove('mob-visible');
+    icon.className  = 'ti ti-calculator';
+    label.textContent = 'Ver Resultado';
+    window.scrollTo(0, 0);
+  }
+}
+/* Quando o resultado é calculado, atualiza o label do botão com destaque */
+const _origShowBtnPDF = showBtnPDF;
+showBtnPDF = function() {
+  _origShowBtnPDF();
+  const btn = document.getElementById('mob-toggle-btn');
+  if (btn && btn.offsetParent !== null) {
+    btn.style.transform = 'scale(1.08)';
+    const lbl = document.getElementById('mob-toggle-label');
+    if (lbl && !_mobShowingResult) lbl.textContent = '✓ Ver Resultado';
+    setTimeout(() => { btn.style.transform = ''; }, 300);
+  }
+};
 
 /* ============================================================
    APROVAÇÃO INTERNA (Ponto 4) — só Filipe, Gabriel Pinheiro e
