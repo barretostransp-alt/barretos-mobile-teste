@@ -266,6 +266,21 @@ body.tema-claro .cotacao-subnav-btn.active{color:var(--accent) !important;}
   <i class="ti ti-plus"></i>
 </button>
 
+<!-- TROCA DE SENHA OBRIGATÓRIA -->
+<div id="troca-senha-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#151820;border:1px solid #1E2130;border-radius:14px;padding:24px;max-width:380px;width:calc(100% - 32px);font-family:'DM Sans',sans-serif;">
+    <div style="font-size:16px;font-weight:800;margin-bottom:6px;color:#E8EAF0">Defina uma nova senha</div>
+    <div style="font-size:12px;color:#6B7280;margin-bottom:16px">Por segurança, antes de continuar você precisa trocar a senha temporária por uma só sua.</div>
+    <label style="font-size:11px;font-weight:600;color:#6B7280;display:block;margin-bottom:5px">Nova senha</label>
+    <input type="password" id="ts-senha" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;border:1px solid #1E2130;background:#0F1117;color:#E8EAF0;margin-bottom:12px;font-family:inherit;font-size:16px" placeholder="Mínimo 8 caracteres">
+    <label style="font-size:11px;font-weight:600;color:#6B7280;display:block;margin-bottom:5px">Confirmar nova senha</label>
+    <input type="password" id="ts-senha2" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;border:1px solid #1E2130;background:#0F1117;color:#E8EAF0;margin-bottom:8px;font-family:inherit;font-size:16px" placeholder="Repita a senha">
+    <div id="ts-msg" style="font-size:12px;color:#EF4444;min-height:16px;margin-bottom:10px"></div>
+    <button id="ts-btn" onclick="salvarTrocaSenhaObrigatoria()" style="width:100%;background:#F5B800;color:#111;border:none;border-radius:8px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Salvar e continuar</button>
+    <button onclick="executarLogout_()" style="width:100%;background:none;border:none;color:#6B7280;padding:10px;font-size:12px;cursor:pointer;margin-top:4px;font-family:inherit">Sair</button>
+  </div>
+</div>
+
 <div class="modal-ov" id="modal-card" onclick="if(event.target===this)fecharModal()">
   <div class="modal-sheet">
     <div class="modal-drag"></div>
@@ -517,10 +532,44 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('top-user').textContent = (user.nome||'').split(' ')[0].toUpperCase();
   var sideName = document.getElementById('sidebar-user-name');
   if (sideName) sideName.textContent = user.nome || '';
+  if (localStorage.getItem('barretos_deve_trocar_senha') === '1') {
+    document.getElementById('troca-senha-overlay').style.display = 'flex';
+  }
   initPullToRefresh();
   fetchPermissoes();
   registrarServiceWorkerEAtualizarBotaoPush_();
 });
+
+/* ── Troca de senha obrigatória (senha temporária/padrão) ── */
+async function salvarTrocaSenhaObrigatoria() {
+  var senha  = document.getElementById('ts-senha').value;
+  var senha2 = document.getElementById('ts-senha2').value;
+  var msg    = document.getElementById('ts-msg');
+  msg.textContent = '';
+  if (!senha || senha.length < 8) { msg.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
+  if (senha !== senha2) { msg.textContent = 'As senhas não conferem.'; return; }
+  var btn = document.getElementById('ts-btn');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + getAuthToken() },
+      body: JSON.stringify({ password: senha }),
+    });
+    if (!res.ok) {
+      var j = await res.json().catch(function(){ return {}; });
+      msg.textContent = j.msg || j.error_description || 'Erro ao trocar a senha.';
+      btn.disabled = false; btn.textContent = 'Salvar e continuar';
+      return;
+    }
+    await apiFetch(API_BASE + '/usuarios/me/senha-trocada', { method: 'PUT' }).catch(function(){});
+    localStorage.removeItem('barretos_deve_trocar_senha');
+    document.getElementById('troca-senha-overlay').style.display = 'none';
+  } catch(e) {
+    msg.textContent = 'Erro de conexão.';
+    btn.disabled = false; btn.textContent = 'Salvar e continuar';
+  }
+}
 
 /* ── Notificações Push ──────────────────────────────────────────────
    Funciona mesmo com o app fechado ou a tela bloqueada — diferente do
@@ -1416,7 +1465,7 @@ function logout() {
 }
 
 function executarLogout_() {
-  ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k) {
+  ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh','barretos_deve_trocar_senha'].forEach(function(k) {
     sessionStorage.removeItem(k); localStorage.removeItem(k);
   });
   window.location.href = 'mobile_login.html';

@@ -106,7 +106,7 @@ async function doLogin() {
     var j = await r.json();
     if (r.ok && j.access_token) {
       var pr = await fetch(
-        SUPABASE_URL + '/rest/v1/usuarios?select=nome,login,perfil,permissoes(ferramentas)&auth_user_id=eq.' + j.user.id,
+        SUPABASE_URL + '/rest/v1/usuarios?select=nome,login,perfil,deve_trocar_senha,permissoes(ferramentas)&auth_user_id=eq.' + j.user.id,
         { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + j.access_token } }
       );
       var linhas = await pr.json();
@@ -126,6 +126,7 @@ async function doLogin() {
       localStorage.setItem('barretos_permissoes', JSON.stringify(ferramentas));
       localStorage.setItem('barretos_auth_token',   j.access_token);
       localStorage.setItem('barretos_auth_refresh', j.refresh_token);
+      localStorage.setItem('barretos_deve_trocar_senha', (perfilRow && perfilRow.deve_trocar_senha) ? '1' : '');
       setMsg('Bem-vindo, ' + user.nome + '!', true);
       setTimeout(function() { window.location.href = 'mobile.html'; }, 600);
     } else {
