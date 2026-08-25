@@ -32,9 +32,17 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
 .sidebar-backdrop.open{display:block}
 .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:0;bottom:0;z-index:200;transition:left .2s}
 .sidebar.mobile-open{left:0;box-shadow:12px 0 32px rgba(0,0,0,.5)}
-.topbar{padding:0 14px}
+.topbar{padding:0 10px;gap:8px}
+.topbar-title{min-width:0;overflow:hidden}
+.topbar-title span#topbar-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{display:none} /* some no mobile pra sobrar espaço pros botões */
+.topbar-right{gap:4px}
+/* Nem todo botão tem o texto dentro de <span> (alguns têm o texto solto
+   ao lado do ícone) — font-size:0 no botão esconde qualquer texto
+   independente de estar em span ou não; o ícone mantém o próprio tamanho
+   porque já vem com font-size inline. */
+.topbar-right .btn{font-size:0;padding:7px 9px;gap:0;white-space:nowrap}
 .topbar-right .btn span{display:none}
-.topbar-right .btn i{margin:0}
 .content{padding:14px}
 .kpi-grid{grid-template-columns:1fr 1fr}
 .panel-body{overflow-x:auto}

@@ -118,6 +118,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'DM Sans
 .header-stats{width:100%;order:4;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hstat{min-width:0}
 .fat-wrap{max-height:280px}
+/* "Operações do Mês" + "Top 5 Clientes" usam um grid de 2 colunas fixo
+   inline no HTML (1fr 260px) — precisa de !important pra sobrescrever,
+   já que estilo inline sempre vence estilo de classe. */
+.grid-fat-heatmap{display:block!important;overflow:visible!important}
+.grid-fat-heatmap > .card{margin-bottom:14px;max-height:340px}
 </style>
 
 <style>
@@ -181,7 +186,7 @@ body.tema-claro .card-section,body.tema-claro .op-row,body.tema-claro .op-card{b
     </div>
 
     <!-- FATURAMENTO + HEATMAP -->
-    <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;flex:1;overflow:hidden;min-height:0">
+    <div class="grid-fat-heatmap" style="display:grid;grid-template-columns:1fr 260px;gap:16px;flex:1;overflow:hidden;min-height:0">
 
       <!-- FATURAMENTO -->
       <div class="card" style="display:flex;flex-direction:column;overflow:hidden">

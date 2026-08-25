@@ -271,8 +271,11 @@ body.tema-claro .fila-card{background:#FFFFFF!important;border-color:#E2E8F0!imp
   .topbar-title span#topbar-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .topbar-sub{display:none} /* some no mobile pra economizar espaço */
   .topbar > .only-gestor[style*="margin-left"]{display:none!important} /* filtro de CNPJ do topbar some — cabe demais no dashboard/detalhamento */
-  .topbar-right{gap:6px}
-  .topbar-right .btn span,.topbar-right .btn{white-space:nowrap}
+  .topbar-right{gap:4px}
+  /* Botões da barra de ações viram só ícone no celular (o texto some via
+     font-size:0 no botão — o ícone mantém o próprio tamanho porque já vem
+     com font-size inline no <i>, então não precisa mexer no HTML) */
+  .topbar-right .btn{font-size:0;padding:7px 9px;gap:0;white-space:nowrap}
   .content{padding:12px}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-val{font-size:16px}
