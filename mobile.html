@@ -237,6 +237,13 @@ body.tema-claro .cotacao-subnav-btn.active{color:var(--accent) !important;}
       </div>
     </div>
     <nav class="sidebar-nav-body" id="sidebar-nav-body"></nav>
+    <div class="sidebar-section-lbl" style="margin-top:auto;padding:10px 16px 4px">Conta</div>
+    <button class="sidebar-item" id="btn-ativar-push" style="border:none;background:none;font-family:inherit;font-size:inherit;cursor:pointer;width:100%;text-align:left" onclick="ativarNotificacoes()">
+      <i class="ti ti-bell"></i><span id="txt-ativar-push">Ativar Notificações</span>
+    </button>
+    <button class="sidebar-item" style="border:none;background:none;font-family:inherit;font-size:inherit;cursor:pointer;color:var(--red)" onclick="logout()">
+      <i class="ti ti-logout" style="color:var(--red)"></i>Encerrar Sessão
+    </button>
   </aside>
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
 
@@ -511,7 +518,72 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sideName) sideName.textContent = user.nome || '';
   initPullToRefresh();
   fetchPermissoes();
+  registrarServiceWorkerEAtualizarBotaoPush_();
 });
+
+/* ── Notificações Push ──────────────────────────────────────────────
+   Funciona mesmo com o app fechado ou a tela bloqueada — diferente do
+   alerta antigo (que só existia enquanto a aba estava aberta). O
+   Service Worker (sw.js) é quem recebe o push de verdade; aqui só
+   pedimos a permissão e mandamos a inscrição pro backend guardar. */
+function urlBase64ParaUint8Array_(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function registrarServiceWorkerEAtualizarBotaoPush_() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    var btn = document.getElementById('btn-ativar-push');
+    if (btn) btn.style.display = 'none'; // navegador não suporta (ex: Safari fora do modo "adicionado à tela")
+    return;
+  }
+  try {
+    var reg = await navigator.serviceWorker.register('sw.js');
+    var sub = await reg.pushManager.getSubscription();
+    var txt = document.getElementById('txt-ativar-push');
+    if (sub && txt) txt.textContent = 'Notificações ativadas ✓';
+  } catch (e) {}
+}
+
+async function ativarNotificacoes() {
+  var txt = document.getElementById('txt-ativar-push');
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Esse navegador não suporta notificações. No iPhone, é preciso primeiro "Adicionar à Tela de Início" antes de ativar.');
+      return;
+    }
+    var permissao = await Notification.requestPermission();
+    if (permissao !== 'granted') { alert('Permissão de notificação negada.'); return; }
+
+    var reg = await navigator.serviceWorker.ready;
+    var r = await apiFetch(API_BASE + '/push/vapid-public-key');
+    var j = await r.json();
+    if (!j.publicKey) { alert('Notificações ainda não configuradas no servidor.'); return; }
+
+    var sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ParaUint8Array_(j.publicKey),
+      });
+    }
+
+    await apiFetch(API_BASE + '/push/inscrever', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: (user && user.login) || '', subscription: sub.toJSON() }),
+    });
+
+    if (txt) txt.textContent = 'Notificações ativadas ✓';
+    alert('Notificações ativadas! Você vai receber os alertas mesmo com o app fechado.');
+  } catch (e) {
+    alert('Não foi possível ativar as notificações: ' + e.message);
+  }
+}
 
 /* ── Pull to Refresh ── */
 function initPullToRefresh() {
