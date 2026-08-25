@@ -1412,11 +1412,28 @@ async function excluirCard() {
 
 function logout() {
   if (!confirm('Encerrar sessão?')) return;
+  executarLogout_();
+}
+
+function executarLogout_() {
   ['barretos_user','barretos_nome','barretos_perfil','barretos_login','barretos_permissoes','barretos_auth_token','barretos_auth_refresh'].forEach(function(k) {
     sessionStorage.removeItem(k); localStorage.removeItem(k);
   });
   window.location.href = 'mobile_login.html';
 }
+
+/* ── Logout automático por inatividade (1h) ──
+   Não afeta as notificações push: elas dependem só do Service Worker e
+   da inscrição salva no banco, nada disso é tocado aqui. Só conta
+   atividade no shell mobile (menu, toque, teclado, rolagem) — não
+   enxerga o que acontece dentro do iframe de cada módulo aberto. */
+var _ultimaAtividadeMobile = Date.now();
+['click','keydown','touchstart','scroll'].forEach(function(evento) {
+  document.addEventListener(evento, function() { _ultimaAtividadeMobile = Date.now(); }, { passive: true, capture: true });
+});
+setInterval(function() {
+  if (Date.now() - _ultimaAtividadeMobile > 60 * 60 * 1000) executarLogout_();
+}, 60 * 1000);
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
