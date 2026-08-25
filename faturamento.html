@@ -743,6 +743,12 @@ body.tema-claro .fila-card{background:#FFFFFF!important;border-color:#E2E8F0!imp
         </div>
       </div>
     </div>
+    <div class="form-grid form-grid-2" style="margin-top:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Natureza da Operação</label>
+        <input class="form-input" id="sol-natureza-operacao" placeholder="Preenchimento manual">
+      </div>
+    </div>
 
     <div class="modal-section-title"><i class="ti ti-file-certificate" style="font-size:13px"></i> MDF-e</div>
     <div class="form-grid form-grid-2">
@@ -1817,7 +1823,7 @@ var custoOperacionalCardSolicitacaoFat = null;
 
 function openModalSolicitacao(){
   ['sol-cliente','sol-motorista','sol-vendedor','sol-veiculo','sol-origem','sol-uf','sol-destino','sol-uf2',
-   'sol-observacoes','sol-cod'
+   'sol-observacoes','sol-cod','sol-natureza-operacao'
   ].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sol-empresa').value = '';
   document.getElementById('sol-solicita-mdf').value = 'Não';
@@ -1854,6 +1860,7 @@ async function enviarSolicitacao(){
     destino: document.getElementById('sol-destino').value.trim(),
     uf2: document.getElementById('sol-uf2').value.trim().toUpperCase(),
     observacoes: document.getElementById('sol-observacoes').value.trim(),
+    naturezaOperacao: document.getElementById('sol-natureza-operacao').value.trim(),
     solicitante: usuarioAtualNomeFat(),
     solicitaMdf: document.getElementById('sol-solicita-mdf').value,
     obsRotaMdf: document.getElementById('sol-obs-rota-mdf').value.trim()

@@ -440,7 +440,7 @@ function mapearParaApi_(dados) {
   var mapa = {
     "DT CODIGO":"codigo","Resumo":"resumo","TITULO":"titulo","Status":"status","ACOMPANHAMENTO":"acompanhamento",
     "CLIENTE":"cliente","CONTATO CLIENTE":"contato_cliente","CNPJ TOMADOR":"cnpj_tomador","VENDEDOR":"vendedor",
-    "DATA DA COLETA":"data_coleta","PREVISÃO DE ENTREGA":"previsao_entrega",
+    "DATA DA COLETA":"data_coleta","PREVISÃO DE ENTREGA":"previsao_entrega","MODALIDADE":"modalidade","TIPO DE MATERIAL":"tipo_material",
     "CTE":"cte","MDF":"mdf","NF":"nf","DATA DA ENTREGA":"data_entrega",
     "CIDADE ORIGEM":"cidade_origem","UF ORIGEM":"uf_origem","CIDADE DESTINO":"cidade_destino","UF DESTINO":"uf_destino",
     "FRETE COBRADO":"frete_cobrado","FRETE PAGO":"frete_pago","CUSTO OPERACIONAL TOTAL":"custo_operacional_total","ADIANTAMENTO":"adiantamento",
@@ -461,7 +461,7 @@ function mapearDoApi_(row) {
   var mapaInverso = {
     codigo:"DT CODIGO", resumo:"Resumo", titulo:"TITULO", status:"Status", acompanhamento:"ACOMPANHAMENTO",
     cliente:"CLIENTE", contato_cliente:"CONTATO CLIENTE", cnpj_tomador:"CNPJ TOMADOR", vendedor:"VENDEDOR",
-    data_coleta:"DATA DA COLETA", previsao_entrega:"PREVISÃO DE ENTREGA",
+    data_coleta:"DATA DA COLETA", previsao_entrega:"PREVISÃO DE ENTREGA", modalidade:"MODALIDADE", tipo_material:"TIPO DE MATERIAL",
     cte:"CTE", mdf:"MDF", nf:"NF", data_entrega:"DATA DA ENTREGA",
     cidade_origem:"CIDADE ORIGEM", uf_origem:"UF ORIGEM", cidade_destino:"CIDADE DESTINO", uf_destino:"UF DESTINO",
     frete_cobrado:"FRETE COBRADO", frete_pago:"FRETE PAGO", custo_operacional_total:"CUSTO OPERACIONAL TOTAL", adiantamento:"ADIANTAMENTO",
@@ -491,6 +491,8 @@ var CAMPOS_CARD  = [
   {"key": "ACOMPANHAMENTO",          "label": "Acompanhamento",               "type": "textarea",   "section": "Operação"},
   {"key": "DATA DA COLETA",          "label": "Data da Coleta",               "type": "date",       "section": "Operação"},
   {"key": "PREVISÃO DE ENTREGA",     "label": "Previsão de Entrega",          "type": "date",       "section": "Operação"},
+  {"key": "MODALIDADE",              "label": "Modalidade",                  "type": "select-modalidade", "section": "Operação"},
+  {"key": "TIPO DE MATERIAL",        "label": "Tipo de Material",            "type": "text",       "section": "Operação"},
   {"key": "DATA DA ENTREGA",         "label": "Data da Entrega (real)",       "type": "date",       "section": "Operação"},
   /* ── Rota ── */
   {"key": "CIDADE ORIGEM",           "label": "Cidade Origem",                "type": "text",       "section": "Rota"},
@@ -1344,6 +1346,13 @@ function renderModalBody(data) {
     } else if (f.type === 'select-pix') {
       inp = document.createElement('select'); inp.id = 'cf-' + f.key;
       ['','CPF','CNPJ','Telefone','E-mail','Chave aleatória'].forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
+        if ((data[f.key]||'') === o) opt.selected = true;
+        inp.appendChild(opt);
+      });
+    } else if (f.type === 'select-modalidade') {
+      inp = document.createElement('select'); inp.id = 'cf-' + f.key;
+      ['','Dedicado','Fracionado'].forEach(function(o) {
         var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
         if ((data[f.key]||'') === o) opt.selected = true;
         inp.appendChild(opt);
