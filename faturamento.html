@@ -1531,6 +1531,8 @@ async function carregarDashboardFat(){
   document.getElementById('dash-kpis-gerais').innerHTML = `
     <div class="kpi-card gold"><i class="ti ti-report-money kpi-icon gold"></i>
       <div class="kpi-val">${fmtMoeda(dados.totais.faturamento)}</div><div class="kpi-lbl">Faturamento Total</div></div>
+    <div class="kpi-card blue"><i class="ti ti-clock-dollar kpi-icon blue"></i>
+      <div class="kpi-val">${fmtMoeda(dados.totais.aFaturar)}</div><div class="kpi-lbl">A Faturar</div></div>
     <div class="kpi-card orange"><i class="ti ti-receipt-2 kpi-icon orange"></i>
       <div class="kpi-val">${fmtMoeda(dados.totais.custoOp)}</div><div class="kpi-lbl">Custo Operacional Total</div></div>
     <div class="kpi-card ${dados.totais.lucroLiquido<0?'red':'green'}"><i class="ti ti-trending-up kpi-icon ${dados.totais.lucroLiquido<0?'red':'green'}"></i>
