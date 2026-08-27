@@ -961,6 +961,11 @@ function showShell(){
   document.getElementById("shell").classList.add("visible");
   
 }
+function ehJesseFarias(user){
+  var nome = ((user && user.nome)||'').trim().toLowerCase();
+  var login = ((user && user.login)||'').trim().toLowerCase();
+  return nome.indexOf('jess')===0 || login.indexOf('jess')===0;
+}
 function applyUser(user){
   var nome=user.nome||user.login||"?", perfil=user.perfil||"colaborador", login=user.login||"";
   document.getElementById("sb-uname").textContent    = nome;
@@ -976,6 +981,12 @@ function applyUser(user){
 
   // Busca e aplica permissões
   setTimeout(function(){ aplicarPermissoes(login); }, 200);
+  // Exceção pontual pedida pelo Alex: Jessé Farias não deve ver a tela de
+  // Início (ela não é controlada pelas permissões de módulo normais).
+  if (ehJesseFarias(user)) {
+    var ni=document.getElementById("nav-inicio");
+    if(ni) ni.style.display="none";
+  }
   // Restore user colors after login
   setTimeout(carregarCorSalva, 100);
   // Alerta de novas solicitações no Financeiro (só pra Lisa Marie)
@@ -1112,7 +1123,7 @@ document.addEventListener("DOMContentLoaded", function(){
   if(sc&&gs) sc.value=gs.value;
   if(!WEBAPP_URL){ setTimeout(function(){ if(typeof openConfig==="function") openConfig(); },600); }
   var raw=sessionStorage.getItem("barretos_user")||localStorage.getItem("barretos_user");
-  if(raw){ try{ var u=JSON.parse(raw); applyUser(u); showShell(); navigate("inicio"); setTimeout(function(){ mostrarAgendaDia(u); },1200); return; }catch(e){} }
+  if(raw){ try{ var u=JSON.parse(raw); applyUser(u); showShell(); navigate(ehJesseFarias(u)?"kanban_gon":"inicio"); setTimeout(function(){ mostrarAgendaDia(u); },1200); return; }catch(e){} }
   showLogin();
 });
 
@@ -1120,7 +1131,7 @@ document.addEventListener("DOMContentLoaded", function(){
 window._shellLoginSuccess = function(user){
   applyUser(user);
   showShell();
-  navigate("inicio");
+  navigate(ehJesseFarias(user)?"kanban_gon":"inicio");
   setTimeout(function(){ mostrarAgendaDia(user); }, 1200);
 };
 
