@@ -443,7 +443,7 @@ function mapearParaApi_(dados) {
     "DATA DA COLETA":"data_coleta","PREVISÃO DE ENTREGA":"previsao_entrega","MODALIDADE":"modalidade","TIPO DE MATERIAL":"tipo_material",
     "CTE":"cte","MDF":"mdf","NF":"nf","DATA DA ENTREGA":"data_entrega",
     "CIDADE ORIGEM":"cidade_origem","UF ORIGEM":"uf_origem","CIDADE DESTINO":"cidade_destino","UF DESTINO":"uf_destino",
-    "FRETE COBRADO":"frete_cobrado","FRETE PAGO":"frete_pago","CUSTO OPERACIONAL TOTAL":"custo_operacional_total","ADIANTAMENTO":"adiantamento",
+    "FRETE COBRADO":"frete_cobrado","FRETE PAGO":"frete_pago","PEDAGIO":"pedagio_valor","CUSTO OPERACIONAL TOTAL":"custo_operacional_total","ADIANTAMENTO":"adiantamento",
     "TIPO DE VEICULO":"tipo_veiculo","MOTORISTA":"motorista","TELEFONE MOTORISTA":"telefone_motorista","GERENCIAMENTO":"gerenciamento",
     "TITULAR DA CONTA":"titular_conta","TIPO CHAVE PIX":"tipo_chave_pix","CHAVE PIX":"chave_pix","BANCO":"banco",
     "OBSERVACAO":"observacao","VALE PEDAGIO":"vale_pedagio"
@@ -464,7 +464,7 @@ function mapearDoApi_(row) {
     data_coleta:"DATA DA COLETA", previsao_entrega:"PREVISÃO DE ENTREGA", modalidade:"MODALIDADE", tipo_material:"TIPO DE MATERIAL",
     cte:"CTE", mdf:"MDF", nf:"NF", data_entrega:"DATA DA ENTREGA",
     cidade_origem:"CIDADE ORIGEM", uf_origem:"UF ORIGEM", cidade_destino:"CIDADE DESTINO", uf_destino:"UF DESTINO",
-    frete_cobrado:"FRETE COBRADO", frete_pago:"FRETE PAGO", custo_operacional_total:"CUSTO OPERACIONAL TOTAL", adiantamento:"ADIANTAMENTO",
+    frete_cobrado:"FRETE COBRADO", frete_pago:"FRETE PAGO", pedagio_valor:"PEDAGIO", custo_operacional_total:"CUSTO OPERACIONAL TOTAL", adiantamento:"ADIANTAMENTO",
     tipo_veiculo:"TIPO DE VEICULO", motorista:"MOTORISTA", telefone_motorista:"TELEFONE MOTORISTA", gerenciamento:"GERENCIAMENTO",
     titular_conta:"TITULAR DA CONTA", tipo_chave_pix:"TIPO CHAVE PIX", chave_pix:"CHAVE PIX", banco:"BANCO",
     observacao:"OBSERVACAO", cotacao_numero:"COTAÇÃO", vale_pedagio:"VALE PEDAGIO"
@@ -506,6 +506,7 @@ var CAMPOS_CARD  = [
   /* ── Financeiro ── */
   {"key": "FRETE COBRADO",           "label": "Frete Cliente (R$)",           "type": "text",       "section": "Financeiro"},
   {"key": "FRETE PAGO",              "label": "Frete Motorista (R$)",         "type": "text",       "section": "Financeiro"},
+  {"key": "PEDAGIO",                 "label": "Pedágio (R$)",                 "type": "text",       "section": "Financeiro"},
   {"key": "CUSTO OPERACIONAL TOTAL", "label": "Custo Total Operacional (R$)", "type": "text",       "section": "Financeiro"},
   {"key": "ADIANTAMENTO",            "label": "Adiantamento (%)",             "type": "percent",    "section": "Financeiro"},
   {"key": "GERENCIAMENTO",           "label": "Gerenciamento",                "type": "text",       "section": "Financeiro"},
@@ -1376,6 +1377,9 @@ function renderModalBody(data) {
     } else {
       inp = document.createElement('input'); inp.type = f.type||'text';
       inp.id = 'cf-' + f.key; inp.value = data[f.key]||'';
+      if (f.key === 'FRETE PAGO' || f.key === 'PEDAGIO') {
+        inp.addEventListener('blur', onFretMotBlurMobile);
+      }
     }
     div.appendChild(inp); body.appendChild(div);
   });
@@ -1398,6 +1402,24 @@ function sectionIcon(s) {
     'Transporte':'truck','Financeiro':'currency-dollar','Fiscal':'file-invoice','Pagamento':'qrcode','Obs':'notes'
   };
   return m[s] || 'circle';
+}
+
+function parseValorBR_(s) {
+  if (s===null||s===undefined||s==="") return 0;
+  var v = String(s).replace(/R\$\s*/g,"").trim();
+  if (v.indexOf(",")!==-1) v = v.replace(/\./g,"").replace(",",".");
+  var n = parseFloat(v);
+  return isFinite(n) ? n : 0;
+}
+// Custo Operacional Total = Frete Pago + Pedágio (recalcula sempre que
+// um dos dois muda).
+function onFretMotBlurMobile() {
+  var fm = document.getElementById('cf-FRETE PAGO');
+  var ped = document.getElementById('cf-PEDAGIO');
+  var ct = document.getElementById('cf-CUSTO OPERACIONAL TOTAL');
+  if (!fm || !ped || !ct) return;
+  var soma = parseValorBR_(fm.value) + parseValorBR_(ped.value);
+  if (soma > 0) ct.value = String(soma);
 }
 
 function fecharModal() {
