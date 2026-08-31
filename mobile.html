@@ -479,6 +479,14 @@ function mapearDoApi_(row) {
 }
 
 var COLUNAS_STATUS = ["OPERACIONAL", "COLETA", "FATURADO", "FINALIZADO"];
+// Campos de texto livre do card — só maiúsculas (pedido do Alex: consistência
+// visual e de busca). Fora dessa lista: selects, datas, valores em R$/%,
+// DT CODIGO (já forçado em outro lugar) e VENDEDOR (nome próprio, usado com
+// acento/maiúscula certa nos relatórios — não force aqui).
+var CAMPOS_MAIUSCULOS={"CLIENTE":1,"CONTATO CLIENTE":1,"CNPJ TOMADOR":1,"CTE":1,"MDF":1,"NF":1,
+  "CIDADE ORIGEM":1,"CIDADE DESTINO":1,"UF ORIGEM":1,"UF DESTINO":1,"TITULAR DA CONTA":1,
+  "CHAVE PIX":1,"BANCO":1,"TELEFONE MOTORISTA":1,"TITULO":1,"OBSERVACAO":1,"VALE PEDAGIO":1,
+  "TIPO DE VEICULO":1,"MOTORISTA":1,"GERENCIAMENTO":1};
 var CAMPOS_CARD  = [
   /* ── Identificação ── */
   {"key": "TITULO",                  "label": "Título do Card",               "type": "text",       "section": "Identificação"},
@@ -1381,6 +1389,13 @@ function renderModalBody(data) {
         inp.addEventListener('blur', onFretMotBlurMobile);
       }
     }
+    if (CAMPOS_MAIUSCULOS[f.key]) {
+      inp.addEventListener('input', function() {
+        var pos = this.selectionStart, posEnd = this.selectionEnd;
+        this.value = this.value.toUpperCase();
+        if (this.setSelectionRange) this.setSelectionRange(pos, posEnd);
+      });
+    }
     div.appendChild(inp); body.appendChild(div);
   });
 
@@ -1452,7 +1467,8 @@ async function salvarCard() {
   // Demais campos (CAMPOS_CARD não inclui DT CODIGO, então sem duplicata)
   CAMPOS_CARD.forEach(function(f) {
     var el = document.getElementById('cf-' + f.key);
-    if (el) dados[f.key] = el.value;
+    if (!el) return;
+    dados[f.key] = (CAMPOS_MAIUSCULOS[f.key] && el.value) ? el.value.toUpperCase() : el.value;
   });
 
   var aba = ABAS_CONFIG.find(function(a) { return a.key === currentTab; });
