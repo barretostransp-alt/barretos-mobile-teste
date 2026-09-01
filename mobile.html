@@ -1462,6 +1462,12 @@ async function salvarCard() {
     }
   }
 
+  var modalidadeEl = document.getElementById('cf-MODALIDADE');
+  if (modalidadeEl && !modalidadeEl.value) {
+    alert('Modalidade obrigatória — selecione Dedicado ou Fracionado.');
+    return;
+  }
+
   var btn = document.getElementById('btn-save');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px"></span>Salvando…';
