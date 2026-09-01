@@ -1154,7 +1154,9 @@ function paintCardsOnly(key) {
     colCards.forEach(function(c) {
       var div = document.createElement('div'); div.className = 'card-item';
       div.style.setProperty('border-left-color', aba.color);
-      var resumo = c['TITULO'] || (c['Resumo']||'').split(' - ').slice(1).join(' - ') || '';
+      var _parts = (c['Resumo']||'').split(' - ');
+      var _rota = _parts.find(function(p) { return p.toUpperCase().indexOf(' X ') !== -1; }) || '';
+      var resumo = c['TITULO'] || _rota || '';
       div.innerHTML =
         '<div class="ci-code">' + escHtml(c['DT CODIGO']||'') + (c['CTE'] ? ' <span style="font-size:9px;font-weight:400;color:var(--txt-dim);letter-spacing:0">· CTE ' + escHtml(c['CTE']) + '</span>' : '') + '</div>'
         + (resumo ? '<div class="ci-route"><i class="ti ti-route" style="font-size:9px"></i> ' + escHtml(resumo) + '</div>' : '')
