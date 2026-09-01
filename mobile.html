@@ -492,7 +492,7 @@ var CAMPOS_CARD  = [
   {"key": "TITULO",                  "label": "Título do Card",               "type": "text",       "section": "Identificação"},
   {"key": "Status",                  "label": "Status",                       "type": "select",     "section": "Identificação"},
   /* ── Operação ── */
-  {"key": "VENDEDOR",                "label": "Vendedor",                     "type": "text",       "section": "Operação"},
+  {"key": "VENDEDOR",                "label": "Vendedor",                     "type": "select-vendedor", "section": "Operação"},
   {"key": "CLIENTE",                 "label": "Cliente",                      "type": "text",       "section": "Operação"},
   {"key": "CNPJ TOMADOR",            "label": "CNPJ Tomador",                 "type": "text",       "section": "Operação"},
   {"key": "CONTATO CLIENTE",         "label": "Contato Cliente",              "type": "text",       "section": "Operação"},
@@ -1364,6 +1364,13 @@ function renderModalBody(data) {
     } else if (f.type === 'select-modalidade') {
       inp = document.createElement('select'); inp.id = 'cf-' + f.key;
       ['','Dedicado','Fracionado'].forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
+        if ((data[f.key]||'') === o) opt.selected = true;
+        inp.appendChild(opt);
+      });
+    } else if (f.type === 'select-vendedor') {
+      inp = document.createElement('select'); inp.id = 'cf-' + f.key;
+      ['','Filipe','Sabrina','Jessé','Diego','Leonardo','Gabriel'].forEach(function(o) {
         var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
         if ((data[f.key]||'') === o) opt.selected = true;
         inp.appendChild(opt);
