@@ -1279,6 +1279,32 @@ function abrirEdicao(card, key) {
 function renderModalBody(data) {
   var body = document.getElementById('modal-body'); body.innerHTML = '';
 
+  // ── Importar dados de um card existente (só ao criar, igual desktop) ──
+  if (!editCard) {
+    var impDiv = document.createElement('div'); impDiv.className = 'mfield';
+    var impLbl = document.createElement('label');
+    impLbl.textContent = 'Importar dados de um card existente';
+    impDiv.appendChild(impLbl);
+    var impRow = document.createElement('div');
+    impRow.style.cssText = 'display:flex;gap:8px';
+    var impInput = document.createElement('input');
+    impInput.type = 'text'; impInput.id = 'import-cod';
+    impInput.placeholder = 'Ex: S26905';
+    impInput.setAttribute('autocomplete', 'off');
+    impInput.style.flex = '1';
+    var impBtn = document.createElement('button');
+    impBtn.type = 'button'; impBtn.textContent = 'Importar';
+    impBtn.style.cssText = 'white-space:nowrap;padding:0 14px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,184,0,.1);color:var(--gold);font-weight:700;font-size:12px;cursor:pointer';
+    impBtn.onclick = importarCardMobile;
+    impRow.appendChild(impInput); impRow.appendChild(impBtn);
+    impDiv.appendChild(impRow);
+    var impMsg = document.createElement('div');
+    impMsg.id = 'import-msg';
+    impMsg.style.cssText = 'font-size:10px;margin-top:4px';
+    impDiv.appendChild(impMsg);
+    body.appendChild(impDiv);
+  }
+
   // ── DT CODIGO ──
   var dtDiv = document.createElement('div'); dtDiv.className = 'mfield';
   var dtLbl = document.createElement('label');
@@ -1397,6 +1423,11 @@ function renderModalBody(data) {
       if (f.key === 'FRETE PAGO' || f.key === 'PEDAGIO') {
         inp.addEventListener('blur', onFretMotBlurMobile);
       }
+      if (CAMPOS_AUTOCOMPLETE[f.key]) {
+        inp.setAttribute('list', 'dl-' + CAMPOS_AUTOCOMPLETE[f.key]);
+        inp.setAttribute('autocomplete', 'off');
+        inp.addEventListener('input', function(){ salvarAutocompleteMobile_(f.key, this.value); });
+      }
     }
     if (CAMPOS_MAIUSCULOS[f.key]) {
       inp.addEventListener('input', function() {
@@ -1406,6 +1437,14 @@ function renderModalBody(data) {
       });
     }
     div.appendChild(inp); body.appendChild(div);
+  });
+
+  // Datalists de autocomplete (Motorista / Tipo de Veículo).
+  Object.keys(CAMPOS_AUTOCOMPLETE).forEach(function(campo){
+    var dl = document.createElement('datalist');
+    dl.id = 'dl-' + CAMPOS_AUTOCOMPLETE[campo];
+    body.appendChild(dl);
+    populateDatalistMobile_(campo);
   });
 
   // ── Seção Anexos ──
@@ -1418,6 +1457,90 @@ function renderModalBody(data) {
   attachDiv.id = 'attach-container';
   body.appendChild(attachDiv);
   renderAttachments();
+}
+
+// ── Importar dados de um card existente (mesmo recurso do desktop) ──
+// Copia os campos de outro card da mesma aba pro formulário atual, exceto
+// identificação própria, datas e a seção Fiscal (CTE/NF) — igual ao
+// barretos.html/infra.html/etc. Os anexos também "aparecem" no card novo
+// (mesmo comportamento do desktop: mostra os anexos do card de origem,
+// sem duplicar o arquivo no Drive — só confirma visualmente o que existe).
+function importarCardMobile(){
+  var msgEl = document.getElementById('import-msg');
+  var codInp = document.getElementById('import-cod');
+  var cod = (codInp ? codInp.value : '').trim();
+  if(!cod){
+    if(msgEl){ msgEl.textContent = 'Informe o código do card.'; msgEl.style.color = '#EF4444'; }
+    return;
+  }
+  var lista = rawCards[currentTab] || [];
+  var found = lista.find(function(c){
+    return String(c['DT CODIGO']||c['Chave']||'').trim().toUpperCase() === cod.toUpperCase();
+  });
+  if(!found){
+    if(msgEl){ msgEl.textContent = 'Card "'+cod+'" não encontrado.'; msgEl.style.color = '#EF4444'; }
+    return;
+  }
+  var skipFields = {
+    'DT CODIGO':1, 'Chave':1, 'Resumo':1, 'Status':1, 'ACOMPANHAMENTO':1, 'TITULO':1,
+    'DATA DA COLETA':1, 'PREVISÃO DE ENTREGA':1, 'DATA DA ENTREGA':1, 'CTE':1, 'NF':1
+  };
+  var dtEl = document.getElementById('cf-DT CODIGO');
+  var novaData = { 'DT CODIGO': dtEl ? dtEl.value : '' };
+  var copiedCount = 0;
+  Object.keys(found).forEach(function(k){
+    if(skipFields[k]) return;
+    if(found[k]==null || found[k]==='') return;
+    novaData[k] = found[k];
+    copiedCount++;
+  });
+  renderModalBody(novaData);
+  var novoInput = document.getElementById('import-cod');
+  if(novoInput) novoInput.value = cod;
+  var novoMsg = document.getElementById('import-msg');
+  if(novoMsg){
+    novoMsg.textContent = '✓ '+copiedCount+' campos importados de "'+cod+'" (datas e identificação mantidas em branco).';
+    novoMsg.style.color = 'var(--green)';
+  }
+  if(found['DT CODIGO']||found['Chave']) carregarAnexos(found['DT CODIGO']||found['Chave']);
+}
+
+// ── Autocomplete de Motorista / Tipo de Veículo (mesmo padrão da tela de
+// Despesas em Gestão da Frota) — reconhece valores já usados nos cards
+// dessa aba e também lembra o que já foi digitado nesse aparelho antes. ──
+var CAMPOS_AUTOCOMPLETE = { 'MOTORISTA':'motorista', 'TIPO DE VEICULO':'tipoveiculo' };
+function getAutocompleteItensMobile_(campo){
+  var vistos = {}, itens = [];
+  (rawCards[currentTab]||[]).forEach(function(c){
+    var v = (c[campo]||'').trim();
+    if(v && !vistos[v]){ vistos[v]=1; itens.push(v); }
+  });
+  try{
+    var salvos = JSON.parse(localStorage.getItem('mobile_ac_'+CAMPOS_AUTOCOMPLETE[campo])||'[]');
+    salvos.forEach(function(v){ if(v && !vistos[v]){ vistos[v]=1; itens.push(v); } });
+  }catch(e){}
+  return itens;
+}
+function populateDatalistMobile_(campo){
+  var dl = document.getElementById('dl-'+CAMPOS_AUTOCOMPLETE[campo]);
+  if(!dl) return;
+  dl.innerHTML = getAutocompleteItensMobile_(campo).map(function(v){
+    return '<option value="'+v.replace(/"/g,'&quot;')+'"></option>';
+  }).join('');
+}
+function salvarAutocompleteMobile_(campo, valor){
+  valor = (valor||'').trim();
+  if(valor.length<3) return;
+  var chave = CAMPOS_AUTOCOMPLETE[campo];
+  try{
+    var salvos = JSON.parse(localStorage.getItem('mobile_ac_'+chave)||'[]');
+    if(salvos.indexOf(valor)===-1){
+      salvos.unshift(valor);
+      if(salvos.length>30) salvos.pop();
+      localStorage.setItem('mobile_ac_'+chave, JSON.stringify(salvos));
+    }
+  }catch(e){}
+  populateDatalistMobile_(campo);
 }
 
 function sectionIcon(s) {
