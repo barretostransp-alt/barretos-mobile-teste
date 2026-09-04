@@ -123,6 +123,8 @@ body.tema-claro .modal-sheet { background:#FFFFFF !important; }
 .attach-size{font-size:10px;color:var(--txt-dim);flex-shrink:0;}
 .attach-del{background:none;border:none;color:var(--txt-dim);cursor:pointer;font-size:16px;padding:2px 4px;}
 .attach-del:active{color:var(--red);}
+.attach-action{background:none;border:none;color:var(--txt-dim);cursor:pointer;font-size:16px;padding:2px 4px;text-decoration:none;display:inline-flex;flex-shrink:0;}
+.attach-action:active{color:var(--gold);}
 .btn-attach{
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;padding:11px;border-radius:9px;border:1.5px dashed var(--border);
@@ -799,12 +801,20 @@ function renderAttachments() {
       var nome = escHtml(a.nome || a.name || 'arquivo');
       var size = a.size ? formatBytes(a.size) : '';
       var url = a.url || '';
+      // Visualizar usa a própria página do Drive (o navegador não precisa
+      // saber renderizar o arquivo sozinho); baixar força o download via
+      // atributo "download" em vez de depender do navegador abrir o link
+      // cru - sem isso, alguns navegadores/WebViews de celular (sem leitor
+      // de PDF embutido, ou em app instalado) simplesmente não mostravam
+      // nada ao clicar. Sem id/url não tem o que abrir - nesse caso não
+      // mostra o botão em vez de virar um link quebrado.
+      var viewUrl = a.id ? ('https://drive.google.com/file/d/' + a.id + '/view') : url;
       row.innerHTML =
-        '<a href="' + url + '" target="_blank" style="display:flex;align-items:center;gap:10px;flex:1;text-decoration:none;color:inherit;">' +
         '<i class="ti ti-' + icon + ' attach-icon"></i>' +
         '<span class="attach-name">' + nome + '</span>' +
         (size ? '<span class="attach-size">' + size + '</span>' : '') +
-        '</a>' +
+        (viewUrl ? '<a class="attach-action" href="' + viewUrl + '" target="_blank" rel="noopener" title="Visualizar"><i class="ti ti-eye"></i></a>' : '') +
+        (url ? '<a class="attach-action" href="' + url + '" download="' + nome + '" title="Baixar"><i class="ti ti-download"></i></a>' : '') +
         '<button class="attach-del" onclick="removeAttach(' + idx + ')" title="Remover">' +
         '<i class="ti ti-x"></i></button>';
       list.appendChild(row);
