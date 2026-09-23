@@ -4126,7 +4126,6 @@ function populateDatalistMotivoPerda() {
 }
 
 function renderNotasThreadHTML(numero, textoObs) {
-  populateDatalistMotivoPerda();
   const notas = parseNotasCotacao(textoObs).slice().reverse(); // mais recente primeiro
   const lista = notas.length
     ? notas.map(function(n) {
@@ -4138,7 +4137,7 @@ function renderNotasThreadHTML(numero, textoObs) {
     : '<p style="font-size:11px;color:var(--txt-dim,#888)">Nenhuma observação registrada ainda.</p>';
   return `
     <div class="obs-add-row">
-      <input type="text" class="fi" id="nova-nota-${numero}" placeholder="Escrever ou escolher um motivo..." list="dl-motivo-perda" autocomplete="off" oninput="saveCustomACMotivoPerda(this.value)">
+      <input type="text" class="fi" id="nova-nota-${numero}" placeholder="Escrever uma observação...">
       <button class="btn-lookup" onclick="adicionarNotaCotacao('${numero}')"><i class="ti ti-plus" style="font-size:13px"></i></button>
     </div>
     <div id="notas-lista-${numero}">${lista}</div>`;
@@ -4344,10 +4343,18 @@ function buildObsCell(r, rowKey) {
 // (buildObsCell/abrirDetalheCotacao, que registra movimentações com
 // autor e data). Essa aqui é só um texto simples, visível de cara pra
 // quem olhar a tabela, sem precisar abrir nada. Salva ao sair do campo.
+// Dropdown-que-também-aceita-texto-novo (mesmo padrão de Descrição/
+// Fornecedor na Gestão da Frota) — é este campo (Observação Interna) que
+// o Painel do Gestor do CRM garimpa por palavra-chave pra montar o
+// gráfico "Motivos Mais Frequentes de Perda" (ver crmAnaliseService.js).
+// populateDatalistMotivoPerda() é chamado uma vez em renderHistory(), não
+// aqui, pra não reconstruir o <datalist> a cada linha da tabela.
 function buildObsInternaCell(r, rowKey) {
   const valor = String(r['ObservacaoInterna']||'').replace(/"/g,'&quot;');
   return `<td class="obsint-cell"><input type="text" value="${valor}" placeholder="Anotação visível pra todos..."
+    list="dl-motivo-perda" autocomplete="off"
     style="width:160px;background:none;border:1px solid var(--charcoal-border);border-radius:6px;color:inherit;padding:5px 8px;font-size:11px"
+    oninput="saveCustomACMotivoPerda(this.value)"
     onblur="salvarObservacaoInterna('${rowKey}', this)"
     onkeydown="if(event.key==='Enter'){this.blur();}"></td>`;
 }
@@ -4374,6 +4381,7 @@ async function salvarObservacaoInterna(rowKey, inputEl) {
 }
 
 function renderHistory() {
+  populateDatalistMotivoPerda();
   const el = document.getElementById('hist-content');
   const totalGeral = histData.length;
 
