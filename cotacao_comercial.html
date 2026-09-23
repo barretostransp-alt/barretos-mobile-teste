@@ -4082,7 +4082,51 @@ function parseNotasCotacao(texto) {
   });
 }
 
+// Motivo da perda: mesmo padrão de dropdown-que-também-aceita-texto-novo
+// já usado em Descrição/Fornecedor da Gestão da Frota (input com
+// <datalist>, salva o que for digitado de novo no localStorage pra virar
+// sugestão nas próximas vezes). Essas mesmas 9 opções são o que o painel
+// do gestor do CRM garimpa dentro do texto da observação pra montar o
+// gráfico "Motivos Mais Frequentes de Perda" (ver crmAnaliseService.js).
+const AC_DEFAULTS_MOTIVO_PERDA = [
+  'Preço', 'Prazo', 'Concorrência', 'Falta de retorno', 'Condição de Pagamento',
+  'Inadimplência', 'Não Prioridade no Momento', 'Motivos Internos', 'Outros',
+];
+function getACItemsMotivoPerda() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cotacao_ac_motivo_perda') || '[]');
+    const merged = AC_DEFAULTS_MOTIVO_PERDA.slice();
+    saved.forEach(function(v) { if (v && !merged.includes(v)) merged.push(v); });
+    return merged;
+  } catch (e) { return AC_DEFAULTS_MOTIVO_PERDA; }
+}
+function saveCustomACMotivoPerda(value) {
+  if (!value || value.length < 3) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem('cotacao_ac_motivo_perda') || '[]');
+    if (!saved.includes(value) && !AC_DEFAULTS_MOTIVO_PERDA.includes(value)) {
+      saved.unshift(value);
+      if (saved.length > 30) saved.pop();
+      localStorage.setItem('cotacao_ac_motivo_perda', JSON.stringify(saved));
+      populateDatalistMotivoPerda();
+    }
+  } catch (e) {}
+}
+function garantirDatalistMotivoPerda_() {
+  if (document.getElementById('dl-motivo-perda')) return;
+  const dl = document.createElement('datalist');
+  dl.id = 'dl-motivo-perda';
+  document.body.appendChild(dl);
+}
+function populateDatalistMotivoPerda() {
+  garantirDatalistMotivoPerda_();
+  document.getElementById('dl-motivo-perda').innerHTML = getACItemsMotivoPerda()
+    .map(function(v) { return '<option value="' + v.replace(/"/g, '&quot;') + '"></option>'; })
+    .join('');
+}
+
 function renderNotasThreadHTML(numero, textoObs) {
+  populateDatalistMotivoPerda();
   const notas = parseNotasCotacao(textoObs).slice().reverse(); // mais recente primeiro
   const lista = notas.length
     ? notas.map(function(n) {
@@ -4094,7 +4138,7 @@ function renderNotasThreadHTML(numero, textoObs) {
     : '<p style="font-size:11px;color:var(--txt-dim,#888)">Nenhuma observação registrada ainda.</p>';
   return `
     <div class="obs-add-row">
-      <input type="text" class="fi" id="nova-nota-${numero}" placeholder="Escrever uma observação...">
+      <input type="text" class="fi" id="nova-nota-${numero}" placeholder="Escrever ou escolher um motivo..." list="dl-motivo-perda" autocomplete="off" oninput="saveCustomACMotivoPerda(this.value)">
       <button class="btn-lookup" onclick="adicionarNotaCotacao('${numero}')"><i class="ti ti-plus" style="font-size:13px"></i></button>
     </div>
     <div id="notas-lista-${numero}">${lista}</div>`;
