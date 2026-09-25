@@ -1961,7 +1961,7 @@ function fecharAlertaAprovacaoCotacao(){
 }
 
 /* ── ALERTA DE ATIVIDADE NA PRÓPRIA COTAÇÃO (pro vendedor) ──
-   Pra Sabrina Ferreira, Leonardo e Vicentte Gabriel: fica de olho só nas
+   Pra Sabrina Ferreira, Leonardo e Vicentte: fica de olho só nas
    cotações onde Vendedor é o próprio login, e compara um "retrato"
    (quantidade de linhas do histórico de observação + StatusAprovacao)
    contra o que foi visto da última vez. Qualquer mudança — novo
@@ -1978,11 +1978,8 @@ function iniciarAlertaAtividadeCotacao(user){
 
   if(contemTodosTokens_(base, ['sabrina'])){ _ativCotLoginKey = 'sabrina_ferreira'; _ativCotCandidato = 'sabrina'; }
   else if(contemTodosTokens_(base, ['leonardo'])){ _ativCotLoginKey = 'leonardo'; _ativCotCandidato = 'leonardo'; }
-  // 'gabriel' sozinho bateria também com "Gabriel Pinheiro" — usa 'vicentte'+'gabriel'
-  // pra identificar só esse usuário, mas consulta o backend com o token 'gabriel'
-  // (valor real do campo Vendedor nas cotações dele).
-  else if(contemTodosTokens_(base, ['vicentte','gabriel'])){ _ativCotLoginKey = 'vicentte_gabriel'; _ativCotCandidato = 'gabriel'; }
-  else return; // só Sabrina Ferreira, Leonardo e Vicentte Gabriel recebem esse alerta
+  else if(contemTodosTokens_(base, ['vicentte'])){ _ativCotLoginKey = 'vicentte'; _ativCotCandidato = 'vicentte'; }
+  else return; // só Sabrina Ferreira, Leonardo e Vicentte recebem esse alerta
 
   setTimeout(verificarAtividadeCotacao, 3000);
   _ativCotIntervalId = setInterval(verificarAtividadeCotacao, 45000);

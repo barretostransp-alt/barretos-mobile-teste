@@ -1409,7 +1409,7 @@ function renderModalBody(data) {
       });
     } else if (f.type === 'select-vendedor') {
       inp = document.createElement('select'); inp.id = 'cf-' + f.key;
-      ['','Filipe','Sabrina','Jessé','Diego','Leonardo','Gabriel'].forEach(function(o) {
+      ['','Filipe','Sabrina','Jessé','Diego','Leonardo','Gabriel','Vicentte'].forEach(function(o) {
         var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '— selecione —';
         if ((data[f.key]||'') === o) opt.selected = true;
         inp.appendChild(opt);
