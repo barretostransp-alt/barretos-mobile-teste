@@ -896,7 +896,8 @@ function getNavSections() {
       { key: 'conciliacao', label: 'Conciliação', icon: 'ti-building-bank' }
     ]},
     { section: 'Operacional', items: [
-      { key: 'frota', label: 'Frota', icon: 'ti-car' }
+      { key: 'frota', label: 'Frota', icon: 'ti-car' },
+      { key: 'mapa_operacoes', label: 'Mapa', icon: 'ti-map' }
     ].concat(kanbanItems) }
   ];
 }
@@ -1059,6 +1060,13 @@ function switchTab(key) {
     document.getElementById('fab').style.display = 'none';
     document.getElementById('content').innerHTML =
       '<iframe src="gestao_da_frota.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'mapa_operacoes') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Mapa das Operações';
+    document.getElementById('top-sub').textContent = 'rotas, detalhamento e checklist do motorista';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="mapa_operacoes.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
   }
 
   // Subnav da Cotação (Calculadora/Histórico/OC/Aprovação) só aparece
