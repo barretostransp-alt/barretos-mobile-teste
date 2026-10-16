@@ -349,11 +349,6 @@ function onFrameLoadMobile(frameEl, tema){
   setTimeout(function(){ broadcastTemaMobile(tema||(localStorage.getItem('barretos_tema')||'escuro')); }, 250);
 }
 
-// URL_KANBANS agora só é usado pros anexos (upload/lista/exclusão no
-// Google Drive) — os dados do card em si vêm do Supabase, via API_BASE
-// abaixo (mesmo backend do desktop, ver barretos.html/goncalves.html/...).
-var URL_KANBANS  = 'https://script.google.com/macros/s/AKfycbwkX0XLYMnWIKa9SsS1oSv9E2hhGYjKi5Fp2cPHA_J_X1jg7NiGVT4YfdFAjZ3Ps2C4Qg/exec';
-
 var API_BASE = 'https://barretos-backend.onrender.com/api';
 var SUPABASE_URL      = 'https://qjwobkpgqmaqisphwonl.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_c4MrJXB6nTHY0a5ShAFRaQ_Jc4qDdPr';
@@ -382,9 +377,9 @@ async function tentarRenovarToken() {
   } catch (e) { return false; }
 }
 
-// Todas as chamadas ao /api/kanban (cards de verdade, no Supabase) passam
+// Todas as chamadas ao /api/kanban (cards e anexos, no Supabase) passam
 // por aqui — vai sempre com o token de login e tenta renovar sozinho se
-// já tiver expirado. Anexos continuam no Apps Script (URL_KANBANS acima).
+// já tiver expirado.
 async function apiFetch(url, options) {
   options = options || {};
   var headers = Object.assign({}, options.headers, { Authorization: 'Bearer ' + getAuthToken() });
@@ -407,30 +402,6 @@ function mostrarTelaSemAcesso() {
     sessionStorage.removeItem(k); localStorage.removeItem(k);
   });
   window.location.href = 'mobile_login.html';
-}
-
-/* ── Nova tentativa automática quando o backend está ocupado ──
-   O Kanban é o módulo com mais gente mexendo ao mesmo tempo — o Apps
-   Script agora devolve {success:false, ocupado:true} em vez de ficar
-   pendurado até travar (planilha ocupada por outra pessoa). Em vez de
-   mostrar erro na hora, espera um pouco e tenta de novo sozinho — na
-   prática, a maioria das vezes o usuário nem chega a perceber. */
-async function fetchComTentativas_(url, options, maxTentativas){
-  maxTentativas = maxTentativas || 3;
-  for(var tentativa = 1; tentativa <= maxTentativas; tentativa++){
-    try{
-      var res = await fetch(url, options);
-      var json = await res.json();
-      if(json && json.ocupado && tentativa < maxTentativas){
-        await new Promise(function(r){ setTimeout(r, 2500); });
-        continue;
-      }
-      return json;
-    }catch(e){
-      if(tentativa >= maxTentativas) throw e;
-      await new Promise(function(r){ setTimeout(r, 2500); });
-    }
-  }
 }
 
 var ABAS_CONFIG  = [{"key": "kanban_pin", "aba": "PINHEIRO", "pfx": "P", "label": "Pinheiro", "color": "#F97316"}, {"key": "kanban_inf", "aba": "INFRA", "pfx": "S", "label": "Infra", "color": "#14B8A6"}, {"key": "kanban_bar", "aba": "BARRETO'S", "pfx": "B", "label": "Barreto's", "color": "#F5B800"}, {"key": "kanban_gon", "aba": "GONCALVES", "pfx": "G", "label": "Gonçalves", "color": "#3B82F6"}];
@@ -703,7 +674,16 @@ function initPullToRefresh() {
   }, {passive: true});
 }
 
-/* ── Anexos ── */
+/* ── Anexos (Supabase Storage via backend, mesmo endpoint do desktop) ── */
+// Resolve a empresa (coluna "aba" da API) do card em edição ou, ao criar
+// um card novo, da aba atualmente aberta — mesma lógica já usada em
+// salvarCard/excluirCard pra montar a URL /kanban/:empresa/....
+function empresaAtualAnexo_() {
+  var key = editCard ? editCard.key : currentTab;
+  var aba = ABAS_CONFIG.find(function(a) { return a.key === key; });
+  return aba ? aba.aba : '';
+}
+
 function onFilesSelected(files) {
   // Resolve a chave real: card em edição OU DT CODIGO digitado no formulário
   var chave = '';
@@ -718,6 +698,7 @@ function onFilesSelected(files) {
     document.getElementById('file-input').value = '';
     return;
   }
+  var empresa = empresaAtualAnexo_();
 
   var btn = document.querySelector('.btn-attach');
   var filesArray = Array.prototype.slice.call(files);
@@ -734,7 +715,7 @@ function onFilesSelected(files) {
     });
   }
 
-  // Envia um arquivo por vez (sequencial) — Apps Script não suporta paralelo
+  // Envia um arquivo por vez (sequencial) — mesmo padrão do desktop
   (async function enviarSequencial() {
     for (var i = 0; i < filesArray.length; i++) {
       var file = filesArray[i];
@@ -746,16 +727,18 @@ function onFilesSelected(files) {
       }
       try {
         var base64 = await lerBase64(file);
-        var j = await fetchComTentativas_(URL_KANBANS, {
+        var res = await apiFetch(API_BASE + '/kanban/anexos', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'upload_anexo',
-            chave: chave,
+            codigo: chave,
+            empresa: empresa,
             nome: file.name,
             data: base64,
             mimeType: file.type || 'application/octet-stream'
           })
         });
+        var j = await res.json();
         if (j.success && j.anexo) {
           cardAttachments.push(j.anexo);
         } else {
@@ -781,14 +764,32 @@ function onFilesSelected(files) {
 
 function carregarAnexos(chave) {
   if (!chave) return;
-  fetchComTentativas_(URL_KANBANS + '?action=anexos&chave=' + encodeURIComponent(chave))
+  var empresa = empresaAtualAnexo_();
+  apiFetch(API_BASE + '/kanban/anexos?codigo=' + encodeURIComponent(chave) + '&empresa=' + encodeURIComponent(empresa))
+    .then(function(r) { return r.json(); })
     .then(function(j) {
-      if (j.success) {
+      if (j && j.success) {
         cardAttachments = j.anexos || [];
         renderAttachments();
       }
     })
     .catch(function() {});
+}
+
+// O atributo "download" do HTML é ignorado pelo navegador em link de outro
+// domínio (caso do Supabase Storage) — clicar só abria o arquivo pra
+// visualizar, igual o botão de olho. Busca o arquivo e força o download
+// via blob: (sempre "mesma origem") — mesma solução já usada no desktop.
+function baixarAnexoBlob_(el) {
+  var url = el.getAttribute('data-url');
+  var nome = el.getAttribute('data-nome');
+  fetch(url).then(function(r) { return r.blob(); }).then(function(blob) {
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 1000);
+  }).catch(function() { window.open(url, '_blank'); });
 }
 
 function renderAttachments() {
@@ -804,20 +805,12 @@ function renderAttachments() {
       var nome = escHtml(a.nome || a.name || 'arquivo');
       var size = a.size ? formatBytes(a.size) : '';
       var url = a.url || '';
-      // Visualizar usa a própria página do Drive (o navegador não precisa
-      // saber renderizar o arquivo sozinho); baixar força o download via
-      // atributo "download" em vez de depender do navegador abrir o link
-      // cru - sem isso, alguns navegadores/WebViews de celular (sem leitor
-      // de PDF embutido, ou em app instalado) simplesmente não mostravam
-      // nada ao clicar. Sem id/url não tem o que abrir - nesse caso não
-      // mostra o botão em vez de virar um link quebrado.
-      var viewUrl = a.id ? ('https://drive.google.com/file/d/' + a.id + '/view') : url;
       row.innerHTML =
         '<i class="ti ti-' + icon + ' attach-icon"></i>' +
         '<span class="attach-name">' + nome + '</span>' +
         (size ? '<span class="attach-size">' + size + '</span>' : '') +
-        (viewUrl ? '<a class="attach-action" href="' + viewUrl + '" target="_blank" rel="noopener" title="Visualizar"><i class="ti ti-eye"></i></a>' : '') +
-        (url ? '<a class="attach-action" href="' + url + '" download="' + nome + '" title="Baixar"><i class="ti ti-download"></i></a>' : '') +
+        (url ? '<a class="attach-action" href="' + url + '" target="_blank" rel="noopener" title="Visualizar"><i class="ti ti-eye"></i></a>' : '') +
+        (url ? '<a class="attach-action" href="javascript:void(0)" data-url="' + escHtml(url) + '" data-nome="' + nome + '" onclick="baixarAnexoBlob_(this)" title="Baixar"><i class="ti ti-download"></i></a>' : '') +
         '<button class="attach-del" onclick="removeAttach(' + idx + ')" title="Remover">' +
         '<i class="ti ti-x"></i></button>';
       list.appendChild(row);
@@ -836,9 +829,11 @@ function renderAttachments() {
 function removeAttach(idx) {
   var anexo = cardAttachments[idx];
   if (anexo && anexo.id) {
-    fetchComTentativas_(URL_KANBANS, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'excluir_anexo', fileId: anexo.id })
+    var empresa = empresaAtualAnexo_();
+    apiFetch(API_BASE + '/kanban/anexos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: anexo.id, empresa: empresa })
     }).catch(function() {});
   }
   cardAttachments.splice(idx, 1);
