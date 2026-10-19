@@ -120,20 +120,34 @@ body.tema-claro{
 body.tema-claro .chip{color:#374151;}
 body.tema-claro .leaflet-tooltip.rota-tip{box-shadow:0 6px 20px rgba(0,0,0,.15);}
 
-/* ── Aba Detalhamento (lista com todos os cards das 4 empresas) ── */
+/* ── Aba Detalhamento (lista com todos os cards das 4 empresas) ──
+   Virou lista de cards empilhados em vez da tabela densa do desktop — 11
+   colunas (Número/Cliente/Rota/Modalidade/Vendedor/Empresa/Acompanhamento/
+   Motorista/Telefone/Obs./Checklist) não cabem numa tela de celular, e a
+   rolagem horizontal da tabela era uma descoberta que ninguém fazia
+   sozinho. Cada card mostra Número/Cliente/Rota em destaque e o resto
+   organizado embaixo, sem rolar pro lado. */
 .det-view{height:calc(100vh - var(--header-h));display:none;flex-direction:column;overflow:hidden;}
-.det-filtros{display:flex;align-items:center;gap:18px;padding:14px 18px;border-bottom:1px solid var(--border);
-  background:var(--surface);flex-wrap:wrap;flex-shrink:0;}
+.det-filtros{display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:12px 14px;
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
 .det-busca-input{background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--txt);
-  padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;min-width:220px;margin-left:auto;}
+  padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;width:100%;}
 .det-busca-input:focus{outline:none;border-color:var(--gold-b);}
-.det-tabela-wrap{flex:1;overflow:auto;padding:0 18px 18px;}
-.det-tabela{width:100%;border-collapse:collapse;font-size:12px;}
-.det-tabela thead th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--txt-dim);padding:10px;border-bottom:1px solid var(--border);position:sticky;top:0;
-  background:var(--bg);z-index:1;}
-.det-tabela tbody td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);vertical-align:middle;}
-.det-tabela tbody tr:hover{background:rgba(255,255,255,.03)}
+.det-tabela-wrap{flex:1;overflow:auto;padding:12px 14px;}
+.det-cards{display:flex;flex-direction:column;gap:10px;}
+.det-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.det-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.det-card-empresa{font-size:9.5px;color:var(--txt-dim);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+.det-card-cliente{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:3px;}
+.det-card-rota{font-size:11.5px;color:var(--txt-mid);display:flex;align-items:center;gap:5px;margin-bottom:10px;}
+.det-card-rota i{font-size:11px;flex-shrink:0;}
+.det-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px;}
+.det-card-field{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.det-card-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt-dim);}
+.det-card-val{font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.det-card select.det-select{max-width:none;margin-bottom:10px;}
+.det-card-actions{display:flex;gap:8px;}
+.det-card-actions .det-btn-obs{flex:1;justify-content:center;}
 .det-codigo{color:var(--gold);font-weight:700;font-size:11px;white-space:nowrap;}
 .det-select{background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--txt);
   padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;max-width:190px;width:100%;}
@@ -275,15 +289,7 @@ body.tema-claro .leaflet-tooltip.rota-tip{box-shadow:0 6px 20px rgba(0,0,0,.15);
     <input type="text" id="det-busca" class="det-busca-input" placeholder="Buscar por código, cliente ou motorista...">
   </div>
   <div class="det-tabela-wrap">
-    <table class="det-tabela">
-      <thead>
-        <tr>
-          <th>Número</th><th>Cliente</th><th>Rota</th><th>Modalidade</th><th>Vendedor</th><th>Empresa</th>
-          <th>Acompanhamento</th><th>Motorista</th><th>Telefone</th><th>Obs.</th><th>Checklist</th>
-        </tr>
-      </thead>
-      <tbody id="det-tabela-corpo"><tr><td colspan="11" class="det-vazio">Carregando...</td></tr></tbody>
-    </table>
+    <div id="det-tabela-corpo" class="det-cards"><div class="det-vazio">Carregando...</div></div>
   </div>
 </div>
 
@@ -766,7 +772,7 @@ async function buscarTodosCardsDetalhamento_(){
 }
 
 async function carregarDetalhamento_(){
-  document.getElementById('det-tabela-corpo').innerHTML = '<tr><td colspan="11" class="det-vazio">Carregando...</td></tr>';
+  document.getElementById('det-tabela-corpo').innerHTML = '<div class="det-vazio">Carregando...</div>';
   detCardsTodos = await buscarTodosCardsDetalhamento_();
   detCarregado = true;
   renderizarFiltrosDetalhamento_();
@@ -827,7 +833,7 @@ function filtrarCardsDetalhamento_(){
 function renderizarTabelaDetalhamento_(){
   var corpo = document.getElementById('det-tabela-corpo');
   var lista = filtrarCardsDetalhamento_();
-  if (!lista.length) { corpo.innerHTML = '<tr><td colspan="11" class="det-vazio">Nenhum card encontrado com esse filtro.</td></tr>'; return; }
+  if (!lista.length) { corpo.innerHTML = '<div class="det-vazio">Nenhum card encontrado com esse filtro.</div>'; return; }
   corpo.innerHTML = lista.map(function(c){
     var origemResumo = enderecoResumo_(c.endereco_origem, c.uf_origem);
     var destinoResumo = enderecoResumo_(c.endereco_destino, c.uf_destino);
@@ -840,22 +846,25 @@ function renderizarTabelaDetalhamento_(){
     var qtdNotas = (c.notas && c.notas.length) || 0;
     var ultimoChecklist = ultimoChecklist_(c);
     var qtdChecklists = (c.checklists && c.checklists.length) || 0;
-    var celulaChecklist = ultimoChecklist
+    var botaoChecklist = ultimoChecklist
       ? '<button class="det-btn-obs" onclick="abrirDetalheChecklistCard_(\''+empresaAttr+'\',\''+codigoAttr+'\')"><i class="ti ti-clipboard-text"></i> '+contarRespostasPreenchidas_(ultimoChecklist.respostas)+'/'+CAMPOS_CHECKLIST.length+' · '+(ultimoChecklist.status === 'respondido' ? 'Respondido' : 'Pendente')+(qtdChecklists > 1 ? ' (+'+(qtdChecklists-1)+')' : '')+'</button>'
-      : '<span class="det-vazio" style="padding:0">—</span>';
-    return '<tr>'+
-      '<td class="det-codigo">'+e(c.codigo)+'</td>'+
-      '<td>'+e(c.cliente || '—')+'</td>'+
-      '<td>'+e(rota || '—')+'</td>'+
-      '<td>'+e(c.modalidade || '—')+'</td>'+
-      '<td>'+e(c.vendedor || '—')+'</td>'+
-      '<td>'+e(c.empresa)+'</td>'+
-      '<td><select class="det-select '+classeAcompanhamento_(c.acompanhamento)+'" onchange="this.className=\'det-select \'+classeAcompanhamento_(this.value);salvarAcompanhamento_(\''+empresaAttr+'\',\''+codigoAttr+'\',this.value,this)">'+opcoesAO+'</select></td>'+
-      '<td>'+e(c.motorista || '—')+'</td>'+
-      '<td>'+e(c.telefone_motorista || '—')+'</td>'+
-      '<td><button class="det-btn-obs" onclick="abrirNotasCard_(\''+empresaAttr+'\',\''+codigoAttr+'\')"><i class="ti ti-notes"></i> '+qtdNotas+'</button></td>'+
-      '<td>'+celulaChecklist+'</td>'+
-    '</tr>';
+      : '<button class="det-btn-obs" onclick="abrirDetalheChecklistCard_(\''+empresaAttr+'\',\''+codigoAttr+'\')" disabled style="opacity:.5"><i class="ti ti-clipboard-text"></i> Sem checklist</button>';
+    return '<div class="det-card">'+
+      '<div class="det-card-top"><span class="det-codigo">'+e(c.codigo)+'</span><span class="det-card-empresa">'+e(c.empresa)+'</span></div>'+
+      '<div class="det-card-cliente">'+e(c.cliente || '(sem cliente)')+'</div>'+
+      (rota ? '<div class="det-card-rota"><i class="ti ti-route"></i> '+e(rota)+'</div>' : '')+
+      '<div class="det-card-grid">'+
+        '<div class="det-card-field"><span class="det-card-lbl">Modalidade</span><span class="det-card-val">'+e(c.modalidade || '—')+'</span></div>'+
+        '<div class="det-card-field"><span class="det-card-lbl">Vendedor</span><span class="det-card-val">'+e(c.vendedor || '—')+'</span></div>'+
+        '<div class="det-card-field"><span class="det-card-lbl">Motorista</span><span class="det-card-val">'+e(c.motorista || '—')+'</span></div>'+
+        '<div class="det-card-field"><span class="det-card-lbl">Telefone</span><span class="det-card-val">'+e(c.telefone_motorista || '—')+'</span></div>'+
+      '</div>'+
+      '<select class="det-select '+classeAcompanhamento_(c.acompanhamento)+'" onchange="this.className=\'det-select \'+classeAcompanhamento_(this.value);salvarAcompanhamento_(\''+empresaAttr+'\',\''+codigoAttr+'\',this.value,this)">'+opcoesAO+'</select>'+
+      '<div class="det-card-actions">'+
+        '<button class="det-btn-obs" onclick="abrirNotasCard_(\''+empresaAttr+'\',\''+codigoAttr+'\')"><i class="ti ti-notes"></i> Obs. ('+qtdNotas+')</button>'+
+        botaoChecklist+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
