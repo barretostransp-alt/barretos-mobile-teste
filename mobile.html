@@ -135,10 +135,13 @@ body.tema-claro .modal-sheet { background:#FFFFFF !important; }
 
 .empty-state i{font-size:40px;}
 .empty-state p{font-size:13px;}
-.fab{position:fixed;right:16px;bottom:calc(64px + env(safe-area-inset-bottom,0) + 12px);
-  width:52px;height:52px;border-radius:50%;background:var(--accent);color:#111;border:none;
-  font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 16px rgba(245,184,0,.4);z-index:100;}
+/* Antes era um botão flutuante fixo no canto inferior direito — a bolha
+   do Manuel (ver "ASSISTENTE VIRTUAL" mais abaixo) ficou bem em cima dele
+   nessa mesma posição. Virou um ícone normal dentro do topbar, igual
+   btn-tema/logout, sem sobreposição possível. */
+.fab{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#111;border:none;
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(245,184,0,.4);flex-shrink:0;}
 .fab:active{transform:scale(.92);}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;}
 .modal-ov.open{display:flex;}
@@ -272,6 +275,7 @@ body.tema-claro .cotacao-subnav-btn.active{color:var(--accent) !important;}
       <div class="topbar-sub" id="top-sub">carregando...</div>
     </div>
     <span class="topbar-user" id="top-user">—</span>
+    <button class="fab" id="fab" onclick="abrirNovo()" style="display:none" title="Novo card"><i class="ti ti-plus"></i></button>
     <button class="btn-icon" id="btn-tema" onclick="alternarTema()" title="Alternar tema"><i class="ti ti-moon" id="ico-tema"></i></button>
     <button class="btn-icon" onclick="logout()"><i class="ti ti-logout"></i></button>
   </div>
@@ -309,10 +313,6 @@ body.tema-claro .cotacao-subnav-btn.active{color:var(--accent) !important;}
   <div class="cotacao-subnav" id="cotacao-subnav" style="display:none"></div>
   <div class="bottom-nav" id="bottom-nav"></div>
 </div>
-
-<button class="fab" id="fab" onclick="abrirNovo()" style="display:none">
-  <i class="ti ti-plus"></i>
-</button>
 
 <!-- TROCA DE SENHA OBRIGATÓRIA -->
 <div id="troca-senha-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;align-items:center;justify-content:center;">
