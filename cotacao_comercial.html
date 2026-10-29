@@ -2005,6 +2005,7 @@ function mapearCotacaoDoApi_(row) {
     Viagens: row.viagens, ValKm: row.val_km, PesoReal: row.peso_real,
     Cubagem: row.cubagem ? JSON.stringify(row.cubagem) : '',
     CapPeso: row.cap_peso, CapVol: row.cap_vol,
+    FracPaletes: row.frac_paletes, FracComprimento: row.frac_comprimento,
     MargemTipo: row.margem_tipo || '', MargemVal: row.margem_val,
     OverridePiso: row.override_piso, OverrideTotal: row.override_total, OverrideDesconto: row.override_desconto,
     PrazoDias: row.prazo_dias, ObservacoesCliente: row.observacoes_cliente || '',
@@ -2060,6 +2061,7 @@ function mapearCotacaoParaApi_(d) {
     eixos: d.eixos, km: d.km, viagens: d.viagens, val_km: d.valKm,
     peso_real: d.pesoReal, cubagem: d.cubagem ? JSON.parse(d.cubagem) : null,
     cap_peso: d.capPeso, cap_vol: d.capVol,
+    frac_paletes: d.fracPaletes, frac_comprimento: d.fracComprimento,
     margem_tipo: d.margemTipo, margem_val: d.margemVal,
     override_piso: d.overridePiso, override_total: d.overrideTotal, override_desconto: d.overrideDesconto,
     prazo_dias: d.prazoDias, observacoes_cliente: d.observacoesCliente,
@@ -2085,6 +2087,7 @@ async function carregarDadosFracionado(){
     fracDadosCarregados=true;
   }catch(e){ console.error('Falha ao carregar dados do fracionado', e); }
 }
+function ehGestor(){const p=localStorage.getItem('barretos_perfil')||sessionStorage.getItem('barretos_perfil')||'';return p==='gestor';}
 function normStr(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s]/g,'').trim();}
 function slugVeiculo(nome){return String(nome).toLowerCase().trim().replace(/\s+/g,'_');}
 function capitalizarVeiculo(nome){return String(nome).replace(/\b\w/g,c=>c.toUpperCase());}
@@ -2188,7 +2191,7 @@ function updateCapacidades(){const vk=document.getElementById('eixos').value,c=c
 function addCubRow(){const id='r'+rowId++;cubRows.push(id);const tr=document.createElement('tr');tr.id='row-'+id;tr.innerHTML=`<td><input type="number" id="qtd-${id}" value="1" min="1" step="1" style="text-align:center" oninput="recalcCubagem()"></td><td><input type="number" id="alt-${id}" value="0.50" min="0.001" step="0.001" oninput="recalcCubagem()"></td><td><input type="number" id="lar-${id}" value="0.40" min="0.001" step="0.001" oninput="recalcCubagem()"></td><td><input type="number" id="pro-${id}" value="0.30" min="0.001" step="0.001" oninput="recalcCubagem()"></td><td class="out" id="m3-${id}">0,0600</td><td class="out" id="kg-${id}">18,00</td><td><button class="btn-del" onclick="delCubRow('${id}')"><i class="ti ti-x" style="font-size:13px"></i></button></td>`;document.getElementById('cub-body').appendChild(tr);recalcCubagem();}
 function delCubRow(id){cubRows=cubRows.filter(r=>r!==id);const el=document.getElementById('row-'+id);if(el)el.remove();recalcCubagem();}
 function recalcCubagem(){let tM3=0,tKg=0;for(const id of cubRows){const q=parseFloat(document.getElementById('qtd-'+id)?.value)||0,a=parseFloat(document.getElementById('alt-'+id)?.value)||0,l=parseFloat(document.getElementById('lar-'+id)?.value)||0,p=parseFloat(document.getElementById('pro-'+id)?.value)||0,m3=q*a*l*p,kg=m3*300;tM3+=m3;tKg+=kg;const me=document.getElementById('m3-'+id),ke=document.getElementById('kg-'+id);if(me)me.textContent=fmtN(m3,4);if(ke)ke.textContent=fmtN(kg,2);}document.getElementById('cub-total-m3').textContent=fmtN(tM3,4);document.getElementById('cub-total-kg').textContent=fmtN(tKg,2);const pR=parseFloat(document.getElementById('peso-real')?.value)||0,pC=tKg,pConsid=Math.max(pR,pC);document.getElementById('disp-peso-cubado').textContent=fmtN(pC,2)+' kg';const dc=document.getElementById('disp-peso-consid'),ic=document.getElementById('info-peso-consid');if(pR>=pC){dc.textContent=fmtN(pConsid,2)+' kg';dc.style.color='var(--blue-accent)';ic.innerHTML='<i class="ti ti-weight" style="vertical-align:-2px;margin-right:3px;color:var(--blue-accent)"></i>Critério: <strong>peso real</strong>';}else{dc.textContent=fmtN(pConsid,2)+' kg';dc.style.color='var(--green-accent)';ic.innerHTML='<i class="ti ti-cube" style="vertical-align:-2px;margin-right:3px;color:var(--green-accent)"></i>Critério: <strong>peso cubado</strong>';}calc();}
-function setModo(m){modo=m;document.getElementById('btn-ded').classList.toggle('active',m==='dedicado');document.getElementById('btn-fra').classList.toggle('active',m==='fracionado');const isFrac=m==='fracionado';['sec-cubagem','sec-frac','frac-desc','sec-val-km'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isFrac?'block':'none';});const rvw=document.getElementById('frac-regras-veiculos-wrap');if(rvw)rvw.style.display=isFrac?'block':'none';document.getElementById('lbl-viagens').textContent=isFrac?'Nº embarques':'Nº viagens';if(isFrac){if(!EIXOS_DEDICADO_HTML)EIXOS_DEDICADO_HTML=document.getElementById('eixos').innerHTML;popularEixosFracionado();updateCapacidades();}else if(EIXOS_DEDICADO_HTML){document.getElementById('eixos').innerHTML=EIXOS_DEDICADO_HTML;document.getElementById('eixos').value='carreta4';updateCapacidades();}calc();}
+function setModo(m){modo=m;document.getElementById('btn-ded').classList.toggle('active',m==='dedicado');document.getElementById('btn-fra').classList.toggle('active',m==='fracionado');const isFrac=m==='fracionado';['sec-cubagem','sec-frac','frac-desc','sec-val-km'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isFrac?'block':'none';});const rvw=document.getElementById('frac-regras-veiculos-wrap');if(rvw)rvw.style.display=(isFrac&&ehGestor())?'block':'none';document.getElementById('lbl-viagens').textContent=isFrac?'Nº embarques':'Nº viagens';if(isFrac){if(!EIXOS_DEDICADO_HTML)EIXOS_DEDICADO_HTML=document.getElementById('eixos').innerHTML;popularEixosFracionado();updateCapacidades();}else if(EIXOS_DEDICADO_HTML){document.getElementById('eixos').innerHTML=EIXOS_DEDICADO_HTML;document.getElementById('eixos').value='carreta4';updateCapacidades();}calc();}
 function row(label,val,icon,iconColor){return `<div class="result-row"><span class="result-row-label">${icon?`<i class="ti ${icon}" style="font-size:13px;color:${iconColor||'var(--text-muted)'}"></i>`:''}${label}</span><span class="result-row-val">${val}</span></div>`;}
 function calc(){
   const tab=document.getElementById('tabela').value,cIdx=parseInt(document.getElementById('carga').value),vkey=document.getElementById('eixos').value,veic=capVeic[vkey]||capVeic['carreta4'],eixo=veic.eixosAntt,km=parseFloat(document.getElementById('km').value)||0,viagens=parseInt(document.getElementById('viagens').value)||1,margemTipo=document.getElementById('margem-tipo').value,margemVal=parseFloat(document.getElementById('margem-val').value)||0,ra=document.getElementById('result-area'),eIdx=eixosIdx.indexOf(eixo),tRow=tabelas[tab][cIdx],ccd=tRow[eIdx*2],cc=tRow[eIdx*2+1];
@@ -4218,6 +4221,8 @@ function abrirDetalheCotacao(numero) {
       <div class="det-field"><div class="det-lbl">Viagens/Embarques</div><div class="det-val">${fmtCampo(r['Viagens'])}</div></div>
       <div class="det-field"><div class="det-lbl">Valor/km adicional</div><div class="det-val">${fmtCampo(r['ValKm'])}</div></div>
       <div class="det-field"><div class="det-lbl">Peso real (kg)</div><div class="det-val">${fmtCampo(r['Modalidade'] === 'Dedicado' ? 0 : r['PesoReal'])}</div></div>
+      ${r['Modalidade']!=='Dedicado'?`<div class="det-field"><div class="det-lbl">Nº de paletes</div><div class="det-val">${fmtCampo(r['FracPaletes'])}</div></div>
+      <div class="det-field"><div class="det-lbl">Comprimento da carga (m)</div><div class="det-val">${fmtCampo(r['FracComprimento'])}</div></div>`:''}
       ${cubagemHTML}
       <div class="det-field"><div class="det-lbl">Cap. peso (kg)</div><div class="det-val">${fmtCampo(r['CapPeso'])}</div></div>
       <div class="det-field"><div class="det-lbl">Cap. cúbica (m³)</div><div class="det-val">${fmtCampo(r['CapVol'])}</div></div>
@@ -4504,6 +4509,8 @@ function coletarCamposCotacao() {
     cubagem:             modo==='fracionado' ? JSON.stringify(serializeCubagem()) : '',
     capPeso:             document.getElementById('cap-peso')?.value||'',
     capVol:              document.getElementById('cap-vol')?.value||'',
+    fracPaletes:         document.getElementById('frac-paletes')?.value||'',
+    fracComprimento:     document.getElementById('frac-comprimento')?.value||'',
     margemTipo:          document.getElementById('margem-tipo')?.value||'',
     margemVal:           document.getElementById('margem-val')?.value||'',
     overridePiso:        document.getElementById('override-piso')?.value?.trim()||'',
@@ -4972,6 +4979,8 @@ async function loadRefazer() {
     setVal('peso-real',    row['PesoReal']);
     setVal('cap-peso',     row['CapPeso']);
     setVal('cap-vol',      row['CapVol']);
+    setVal('frac-paletes',      row['FracPaletes']);
+    setVal('frac-comprimento',  row['FracComprimento']);
     setVal('margem-tipo',  row['MargemTipo']);
     setVal('margem-val',   row['MargemVal']);
     setVal('override-piso',     row['OverridePiso']);
