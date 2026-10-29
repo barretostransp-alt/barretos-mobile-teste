@@ -2113,16 +2113,20 @@ function popularEixosFracionado(){
   sel.value=aindaValido?atual:slugVeiculo(necessario.veiculo);
 }
 function buscarClassificacaoDestino(label){
-  const parts=String(label||'').split(/,|—|-|\//).map(s=>normStr(s.trim())).filter(s=>s.length>2);
+  // "brasil"/"br" aparecem em quase todo endereço do Nominatim e não dizem
+  // nada sobre a cidade — sem excluir, batiam por engano em município tipo
+  // "Brasil Novo (PA)" quando o destino real nem tinha município cadastrado.
+  const parts=String(label||'').split(/,|—|-|\//).map(s=>normStr(s.trim())).filter(s=>s.length>2&&s!=='brasil'&&s!=='br');
   let ufAlvo=null;
   for(const part of parts){ if(ESTADO_NOME_PARA_UF[part]){ ufAlvo=ESTADO_NOME_PARA_UF[part]; break; } }
-  const porUf=m=>{const nm=normStr(m.municipio);return parts.some(part=>nm===part||nm.startsWith(part)||part.startsWith(nm));};
-  if(ufAlvo){
-    const candidatos=MUNICIPIOS_FRAC.filter(m=>m.uf===ufAlvo);
-    const achado=candidatos.find(porUf);
-    if(achado)return achado;
-  }
-  return MUNICIPIOS_FRAC.find(porUf)||null;
+  const pool=ufAlvo?MUNICIPIOS_FRAC.filter(m=>m.uf===ufAlvo):MUNICIPIOS_FRAC;
+  const exato=pool.find(m=>parts.includes(normStr(m.municipio)));
+  if(exato)return exato;
+  // Sabendo o estado, só aceita match exato dentro dele — não arrisca cair
+  // num município de outro estado só porque um pedaço do endereço bateu.
+  if(ufAlvo)return null;
+  const aproximado=pool.find(m=>{const nm=normStr(m.municipio);return parts.some(part=>nm.startsWith(part)||part.startsWith(nm));});
+  return aproximado||null;
 }
 
 /* ---- Modal: Regras de veículos (fracionado) ---- */
