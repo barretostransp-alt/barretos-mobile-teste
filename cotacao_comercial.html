@@ -2073,7 +2073,7 @@ const tabelas={A:[[4.0338,444.84,5.166,533.36,5.8464,576.59,6.7381,642.1,7.4408,
 const eixosIdx=[2,3,4,5,6,7,9];
 const capVeic={fiorino:{eixosAntt:2,kg:650,m3:3.3,nome:'Fiorino'},vuc:{eixosAntt:2,kg:1500,m3:8,nome:'VUC'},toco:{eixosAntt:2,kg:6000,m3:40,nome:'Toco'},truck:{eixosAntt:3,kg:14000,m3:50,nome:'Truck'},bitruck:{eixosAntt:4,kg:22000,m3:60,nome:'Bitruck'},carreta4:{eixosAntt:5,kg:25000,m3:90,nome:'Carreta Toco'},carreta5:{eixosAntt:6,kg:32000,m3:90,nome:'Carreta Trucada / LS'},bitrem7:{eixosAntt:7,kg:42000,m3:180,nome:'Bitrem / Rodotrem 7 eixos'},bitrem9:{eixosAntt:9,kg:57000,m3:180,nome:'Bitrem / Rodotrem 9 eixos'},guindaste_tm:{eixosAntt:3,kg:0,m3:0,nome:'Guindaste TM',especial:true},munk:{eixosAntt:3,kg:0,m3:0,nome:'Munk',especial:true},prancha:{eixosAntt:5,kg:0,m3:0,nome:'Prancha',especial:true}};
 let modo='dedicado',cubRows=[],rowId=0;
-let VEICULOS_FRAC=[],MUNICIPIOS_FRAC=[],FRAC_CONFIG={acrescimo_fora_area_pct:0},EIXOS_DEDICADO_HTML='',fracDadosCarregados=false,fracCalcId=0;
+let VEICULOS_FRAC=[],MUNICIPIOS_FRAC=[],ESTADOS_FORA_AREA=[],EIXOS_DEDICADO_HTML='',fracDadosCarregados=false,fracCalcId=0;
 const ESTADO_NOME_PARA_UF={acre:'AC',alagoas:'AL',amapa:'AP',amazonas:'AM',bahia:'BA',ceara:'CE','distrito federal':'DF',
   'espirito santo':'ES',goias:'GO',maranhao:'MA','mato grosso':'MT','mato grosso do sul':'MS','minas gerais':'MG',
   para:'PA',paraiba:'PB',parana:'PR',pernambuco:'PE',piaui:'PI','rio de janeiro':'RJ','rio grande do norte':'RN',
@@ -2081,11 +2081,10 @@ const ESTADO_NOME_PARA_UF={acre:'AC',alagoas:'AL',amapa:'AP',amazonas:'AM',bahia
 async function carregarDadosFracionado(){
   if(fracDadosCarregados)return;
   try{
-    const [rVeic,rMun,rCfg]=await Promise.all([apiFetch(API_BASE+'/fracionado/veiculos'),apiFetch(API_BASE+'/fracionado/municipios'),apiFetch(API_BASE+'/fracionado/config')]);
+    const [rVeic,rMun,rEst]=await Promise.all([apiFetch(API_BASE+'/fracionado/veiculos'),apiFetch(API_BASE+'/fracionado/municipios'),apiFetch(API_BASE+'/fracionado/estados-fora-area')]);
     VEICULOS_FRAC=(await rVeic.json()).sort((a,b)=>a.ordem-b.ordem);
     MUNICIPIOS_FRAC=await rMun.json();
-    const cfgRows=await rCfg.json();
-    FRAC_CONFIG=Array.isArray(cfgRows)?(cfgRows[0]||{acrescimo_fora_area_pct:0}):(cfgRows||{acrescimo_fora_area_pct:0});
+    ESTADOS_FORA_AREA=await rEst.json();
     fracDadosCarregados=true;
   }catch(e){ console.error('Falha ao carregar dados do fracionado', e); }
 }
@@ -2117,13 +2116,17 @@ function popularEixosFracionado(){
   sel.innerHTML=disponiveis.map(v=>`<option value="${slugVeiculo(v.veiculo)}">${capitalizarVeiculo(v.veiculo)} (até ${fmtN(v.peso_kg,0)}kg / ${fmtN(v.capacidade_m3,1)}m³ / ${v.paletes} pal. / ${fmtN(v.comprimento_m,1)}m)</option>`).join('');
   sel.value=aindaValido?atual:slugVeiculo(necessario.veiculo);
 }
-function buscarClassificacaoDestino(label){
+function extrairUfDoEndereco(label){
   // "brasil"/"br" aparecem em quase todo endereço do Nominatim e não dizem
-  // nada sobre a cidade — sem excluir, batiam por engano em município tipo
+  // nada sobre o estado — sem excluir, batiam por engano em município tipo
   // "Brasil Novo (PA)" quando o destino real nem tinha município cadastrado.
   const parts=String(label||'').split(/,|—|-|\//).map(s=>normStr(s.trim())).filter(s=>s.length>2&&s!=='brasil'&&s!=='br');
-  let ufAlvo=null;
-  for(const part of parts){ if(ESTADO_NOME_PARA_UF[part]){ ufAlvo=ESTADO_NOME_PARA_UF[part]; break; } }
+  for(const part of parts){ if(ESTADO_NOME_PARA_UF[part]) return ESTADO_NOME_PARA_UF[part]; }
+  return null;
+}
+function buscarClassificacaoDestino(label){
+  const parts=String(label||'').split(/,|—|-|\//).map(s=>normStr(s.trim())).filter(s=>s.length>2&&s!=='brasil'&&s!=='br');
+  const ufAlvo=extrairUfDoEndereco(label);
   const pool=ufAlvo?MUNICIPIOS_FRAC.filter(m=>m.uf===ufAlvo):MUNICIPIOS_FRAC;
   const exato=pool.find(m=>parts.includes(normStr(m.municipio)));
   if(exato)return exato;
@@ -2163,15 +2166,19 @@ function renderRegrasVeiculos(){
     </tbody>
   </table></div>
   <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Carga que não cabe em nenhum veículo acima (qualquer medida maior que a carreta) deve ser cotada como <strong>Dedicado</strong>. O frete mínimo é o piso de cada veículo — se o cálculo der um valor menor, o mínimo prevalece.</p>
-  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--charcoal-border);display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
-    <div>
-      <label class="lbl" for="rv-acrescimo-fora-area" style="display:block;margin-bottom:4px">Acréscimo (%) — destinos fora da planilha de municípios</label>
-      <input type="number" id="rv-acrescimo-fora-area" value="${FRAC_CONFIG.acrescimo_fora_area_pct}" min="0" step="0.1" style="width:110px;padding:5px 7px;border-radius:6px;border:1px solid var(--charcoal-border);background:var(--charcoal-mid);color:inherit;font-size:12px">
-    </div>
-    <button class="btn-copy" style="padding:6px 12px;font-size:11px" onclick="salvarConfigFracionado()"><i class="ti ti-device-floppy" style="font-size:12px"></i> Salvar</button>
-    <span id="rv-config-status" style="font-size:11px"></span>
-  </div>
-  <p style="font-size:11px;color:var(--text-muted);margin-top:6px">Vale pra qualquer cidade de estado que não está na planilha (hoje: DF, SP, RJ, AL, AP, PE, SE, TO).</p>`;
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--charcoal-border)">
+    <div class="sec-label" style="margin-bottom:8px">Acréscimo por estado — destinos fora da planilha de municípios</div>
+    <div style="overflow-x:auto"><table class="cub-table" style="min-width:340px">
+      <thead><tr><th style="text-align:left">Estado</th><th>Acréscimo (%)</th><th></th></tr></thead>
+      <tbody>
+        ${ESTADOS_FORA_AREA.map(e=>`<tr id="rv-estado-row-${e.id}">
+          <td style="text-align:left;font-weight:600">${e.nome_estado} (${e.id})</td>
+          <td><input type="number" id="rv-estado-pct-${e.id}" value="${e.acrescimo_pct}" min="0" step="0.1" style="width:90px;padding:5px 7px;border-radius:6px;border:1px solid var(--charcoal-border);background:var(--charcoal-mid);color:inherit;font-size:12px"></td>
+          <td><button class="btn-copy" style="padding:4px 10px;font-size:11px" onclick="salvarEstadoForaArea('${e.id}')"><i class="ti ti-device-floppy" style="font-size:12px"></i></button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
 }
 async function salvarRegraVeiculo(id){
   const payload={
@@ -2197,20 +2204,21 @@ async function salvarRegraVeiculo(id){
     setTimeout(()=>{btn.innerHTML=original;},2000);
   }
 }
-async function salvarConfigFracionado(){
-  const status=document.getElementById('rv-config-status');
-  const pct=parseFloat(document.getElementById('rv-acrescimo-fora-area').value)||0;
-  status.textContent='Salvando...'; status.style.color='var(--text-muted)';
+async function salvarEstadoForaArea(id){
+  const pct=parseFloat(document.getElementById('rv-estado-pct-'+id).value)||0;
+  const btn=document.querySelector(`#rv-estado-row-${id} button`);
+  const original=btn.innerHTML; btn.innerHTML='<span class="spinner" style="width:11px;height:11px;display:inline-block"></span>';
   try{
-    const r=await apiFetch(API_BASE+'/fracionado/config/1',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({acrescimo_fora_area_pct:pct})});
+    const r=await apiFetch(API_BASE+'/fracionado/estados-fora-area/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({acrescimo_pct:pct})});
     if(!r.ok)throw new Error('falha');
     fracDadosCarregados=false;
     await carregarDadosFracionado();
-    status.textContent='Salvo.'; status.style.color='var(--green-accent)';
+    btn.innerHTML='<i class="ti ti-check" style="font-size:12px;color:var(--green-accent)"></i>';
     if(modo==='fracionado')calc();
-    setTimeout(()=>{status.textContent='';},2000);
+    setTimeout(()=>{btn.innerHTML=original;},1500);
   }catch(e){
-    status.textContent='Erro ao salvar.'; status.style.color='var(--danger)';
+    btn.innerHTML='<i class="ti ti-x" style="font-size:12px;color:var(--danger)"></i>';
+    setTimeout(()=>{btn.innerHTML=original;},2000);
   }
 }
 function fmtBRL(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2})}
@@ -2302,7 +2310,9 @@ function calc(){
       const vkeySel=document.getElementById('eixos').value;
       const veiculoSel=VEICULOS_FRAC.find(v=>slugVeiculo(v.veiculo)===vkeySel)||veiculoNecessario;
       const classif=buscarClassificacaoDestino(addrState.destino.label);
-      const pctClassif=classif?classif.classificacao_pct:(FRAC_CONFIG.acrescimo_fora_area_pct||0);
+      const ufForaArea=classif?null:extrairUfDoEndereco(addrState.destino.label);
+      const estadoForaArea=ufForaArea?ESTADOS_FORA_AREA.find(e=>e.id===ufForaArea):null;
+      const pctClassif=classif?classif.classificacao_pct:(estadoForaArea?.acrescimo_pct||0);
       const freteMinimo=veiculoSel.frete_minimo??300;
       const base=km*veiculoSel.preco_km;
       const comClassificacao=base*(1+pctClassif/100);
@@ -2317,7 +2327,7 @@ function calc(){
       const valorNF=parseFloat(document.getElementById('valor-nf')?.value)||0;
       const localRow=(l,v,ic,cl)=>`<div class="result-row"><span class="result-row-label">${ic?`<i class="ti ${ic}" style="font-size:12px;color:${cl||'var(--text-muted)'};margin-right:6px"></i>`:'<span style="display:inline-block;width:18px"></span>'}${l}</span><span class="result-row-val">${v}</span></div>`;
       let rows='';
-      rows+=localRow(`Destino`,classif?`<strong>${classif.municipio} — ${classif.uf}</strong>`:`<strong>${addrState.destino.label.split(',')[0]}</strong> <span style="color:var(--text-muted);font-size:10px">(fora da planilha de municípios — acréscimo padrão ${fmtPct(pctClassif)})</span>`,'ti-map-pin','var(--green-accent)');
+      rows+=localRow(`Destino`,classif?`<strong>${classif.municipio} — ${classif.uf}</strong>`:`<strong>${addrState.destino.label.split(',')[0]}${ufForaArea?' — '+ufForaArea:''}</strong> <span style="color:var(--text-muted);font-size:10px">(fora da planilha de municípios — acréscimo ${fmtPct(pctClassif)})</span>`,'ti-map-pin','var(--green-accent)');
       rows+=localRow(`Veículo (automático: ${capitalizarVeiculo(veiculoNecessario.veiculo)})`,`<strong>${capitalizarVeiculo(veiculoSel.veiculo)}</strong>`,'ti-truck','var(--gold)');
       rows+=localRow(`Peso considerado (${crit})`,`<span style="font-family:JetBrains Mono,monospace;font-size:12px">${fmtN(pesoConsid,2)} kg</span>`,`ti-${criterioPeso?'weight':'cube'}`,critColor);
       rows+=`<div class="divider-row"></div>`;
