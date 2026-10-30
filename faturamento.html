@@ -494,6 +494,7 @@ body.tema-claro .fila-card{background:#FFFFFF!important;border-color:#E2E8F0!imp
     </div>
     <input type="hidden" id="r-cte-temp">
     <input type="hidden" id="r-id">
+    <div id="r-aviso-complementar" style="display:none;background:var(--gold-dim);border:1px solid var(--gold);border-radius:9px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--gold);font-weight:700"></div>
     <div id="r-aviso-finalizacao" style="display:none;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:12px"></div>
     <div id="r-att-list" class="alist" style="margin-bottom:14px"></div>
 
@@ -2036,6 +2037,7 @@ function openModalRegistro(){
   document.getElementById('r-cte-temp').value = '';
   document.getElementById('r-id').value = '';
   document.getElementById('r-aviso-finalizacao').style.display = 'none';
+  document.getElementById('r-aviso-complementar').style.display = 'none';
   document.getElementById('r-complementar-info').style.display = 'none';
   document.getElementById('r-att-list').innerHTML = '';
   pendCteArquivoReg = null;
@@ -2085,12 +2087,19 @@ function abrirFinalizacao(regId){
   // ficava sendo esquecido, gerando registros finalizados com Valor
   // Freteiro zerado.
   if(r.cod) buscarCardKanbanFat('r');
-  if(r.tipo === 'complementar') carregarInfoComplementarReg_(r.cod, r.empresa);
+  if(r.tipo === 'complementar'){
+    var avisoComp = document.getElementById('r-aviso-complementar');
+    avisoComp.style.display = 'block';
+    avisoComp.innerHTML = '<i class="ti ti-alert-triangle" style="font-size:13px"></i> Esta solicitação é um CT-e COMPLEMENTAR do card ' + (r.cod||'—') + '.';
+    carregarInfoComplementarReg_(r.cod, r.empresa);
+  }
 }
 
 // Mesma conta da solicitação, repetida aqui na finalização — a pessoa que
 // finaliza é quem efetivamente digita o Total Frete, então é aqui que a
-// sugestão precisa estar pra ela poder usar (ou ajustar).
+// sugestão precisa estar pra ela poder usar (ou ajustar). Também aproveita
+// pra apontar o número do CT-e principal já emitido (quando não há
+// ambiguidade — só um CT-e normal emitido de verdade pra esse código).
 async function carregarInfoComplementarReg_(cod, empresa){
   var info = document.getElementById('r-complementar-info');
   info.style.display = 'block';
@@ -2105,6 +2114,9 @@ async function carregarInfoComplementarReg_(cod, empresa){
     var totalFreteEl = document.getElementById('r-total-frete');
     if(!totalFreteEl.value) totalFreteEl.value = r.valorSugerido;
     atualizarPreviewCalculo();
+    var avisoComp = document.getElementById('r-aviso-complementar');
+    avisoComp.innerHTML = '<i class="ti ti-alert-triangle" style="font-size:13px"></i> Esta solicitação é um CT-e COMPLEMENTAR do card ' + (cod||'—') + '.'
+      + (r.cteOriginal ? ' CT-e principal já emitido: <strong>Nº ' + e(r.cteOriginal) + '</strong>.' : '');
   }catch(e){
     info.innerHTML = '<span class="txt-red">Não foi possível calcular agora (erro de conexão).</span>';
   }
