@@ -1480,7 +1480,7 @@ function mapearRegistroDoApi_(row){
     valePedagio: row.vale_pedagio||'', gnre: row.gnre, status: row.status, solicitante: row.solicitante||'',
     dataSolicitacao: fmtDataHoraFat_(row.data_solicitacao), solicitaMdf: row.solicita_mdf||'', obsRotaMdf: row.obs_rota_mdf||'',
     custoOperacionalTotal: row.custo_operacional_total, statusCanhoto: row.status_canhoto||'',
-    prioridade: row.prioridade||'',
+    prioridade: row.prioridade||'', tipo: row.tipo||'normal',
   };
   Object.assign(r, calcularResultado(r.totalFrete, r.valorFreteiro, r.gnre, r.observacoes, r.dataFaturamento));
   return r;
