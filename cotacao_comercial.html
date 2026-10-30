@@ -2168,12 +2168,13 @@ function renderRegrasVeiculos(){
   <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Carga que não cabe em nenhum veículo acima (qualquer medida maior que a carreta) deve ser cotada como <strong>Dedicado</strong>. O frete mínimo é o piso de cada veículo — se o cálculo der um valor menor, o mínimo prevalece.</p>
   <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--charcoal-border)">
     <div class="sec-label" style="margin-bottom:8px">Acréscimo por estado — destinos fora da planilha de municípios</div>
-    <div style="overflow-x:auto"><table class="cub-table" style="min-width:340px">
-      <thead><tr><th style="text-align:left">Estado</th><th>Acréscimo (%)</th><th></th></tr></thead>
+    <div style="overflow-x:auto"><table class="cub-table" style="width:380px;table-layout:fixed">
+      <colgroup><col style="width:200px"><col style="width:130px"><col style="width:50px"></colgroup>
+      <thead><tr><th style="text-align:left">Estado</th><th style="text-align:left">Acréscimo (%)</th><th></th></tr></thead>
       <tbody>
         ${ESTADOS_FORA_AREA.map(e=>`<tr id="rv-estado-row-${e.id}">
           <td style="text-align:left;font-weight:600">${e.nome_estado} (${e.id})</td>
-          <td><input type="number" id="rv-estado-pct-${e.id}" value="${e.acrescimo_pct}" min="0" step="0.1" style="width:90px;padding:5px 7px;border-radius:6px;border:1px solid var(--charcoal-border);background:var(--charcoal-mid);color:inherit;font-size:12px"></td>
+          <td style="text-align:left"><input type="number" id="rv-estado-pct-${e.id}" value="${e.acrescimo_pct}" min="0" step="0.1" style="width:90px;padding:5px 7px;border-radius:6px;border:1px solid var(--charcoal-border);background:var(--charcoal-mid);color:inherit;font-size:12px"></td>
           <td><button class="btn-copy" style="padding:4px 10px;font-size:11px" onclick="salvarEstadoForaArea('${e.id}')"><i class="ti ti-device-floppy" style="font-size:12px"></i></button></td>
         </tr>`).join('')}
       </tbody>
