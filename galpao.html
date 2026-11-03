@@ -78,12 +78,8 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
 .tab-btn:hover{color:var(--txt)}
 .tab-btn.ativo{color:var(--txt);border-bottom-color:var(--gold)}
 
-.resumo{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px}
-.resumo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
-.resumo-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .resumo-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-dim)}
 .resumo-total{font-size:32px;font-weight:800;margin-top:2px}
-.resumo-acoes{display:flex;gap:8px}
 
 .barra{display:flex;height:10px;border-radius:999px;overflow:hidden;margin-top:14px;background:var(--surface2)}
 .barra span{height:100%;transition:width .25s ease}
@@ -91,6 +87,12 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
 .legenda-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt-dim)}
 .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .legenda-item b{color:var(--txt)}
+
+.sidebar-resumo{padding:16px 14px;border-top:1px solid var(--border)}
+.sidebar-resumo .resumo-total{font-size:22px;margin-bottom:12px}
+.sidebar-resumo .legenda{flex-direction:column;gap:7px;margin-top:12px;margin-bottom:14px}
+.resumo-acoes-sb{display:flex;flex-direction:column;gap:6px}
+.resumo-acoes-sb .btn{width:100%;justify-content:center}
 
 .painel{margin-top:22px}
 .painel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--cor,var(--border))}
@@ -129,7 +131,6 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
 
 @media (max-width:460px){
   .resumo-total{font-size:26px}
-  .resumo-top{flex-direction:column;align-items:flex-start}
 }
 /* Mobile: só existe 1 sub-aba por enquanto, não vale o espaço de uma
    sidebar lateral de 220px numa tela de celular — some com ela e o
@@ -137,7 +138,11 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
    dar zoom automático ao focar o input (mesmo ajuste já usado nas outras
    telas "pesadas" do app mobile, ex: gestao_da_frota.html). */
 @media (max-width:860px){
-  .sidebar{display:none}
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);overflow-y:visible}
+  .sidebar-nav,.sidebar-footer{display:none}
+  .sidebar-resumo{border-top:none}
+  .main{height:auto}
   .campo input,.campo select{font-size:16px}
 }
 </style>
@@ -151,10 +156,24 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
   <div class="sidebar-logo">
     <div class="sidebar-logo-text">Galpão</div>
   </div>
-  <div class="sidebar-section">Operação</div>
-  <div class="nav-item active" onclick="showView('calculadora')">
-    <i class="ti ti-calculator"></i>Calculadora
+  <div class="sidebar-nav">
+    <div class="sidebar-section">Operação</div>
+    <div class="nav-item active" onclick="showView('calculadora')">
+      <i class="ti ti-calculator"></i>Calculadora
+    </div>
   </div>
+
+  <div class="sidebar-resumo">
+    <div class="resumo-label">Custo operacional total · mês</div>
+    <div class="resumo-total num" id="total-geral">R$ 0,00</div>
+    <div class="barra" id="barra-empilhada"></div>
+    <div class="legenda" id="legenda"></div>
+    <div class="resumo-acoes-sb">
+      <button class="btn btn-ghost btn-sm" id="btn-copiar" type="button">Copiar resumo</button>
+      <button class="btn btn-danger btn-sm" id="btn-limpar" type="button">Limpar tudo</button>
+    </div>
+  </div>
+
   <div class="sidebar-footer">
     <div style="font-size:10px;color:var(--txt-muted);line-height:1.4">Mais sub-abas chegam aqui com o tempo (recebimento, triagem, expedição…).</div>
   </div>
@@ -189,23 +208,6 @@ body{background:var(--bg);color:var(--txt);min-height:100vh;display:flex;overflo
         </div>
 
         <div id="view-custo">
-          <div class="resumo">
-            <div class="resumo-card">
-              <div class="resumo-top">
-                <div>
-                  <div class="resumo-label">Custo operacional total · por mês</div>
-                  <div class="resumo-total num" id="total-geral">R$ 0,00</div>
-                </div>
-                <div class="resumo-acoes">
-                  <button class="btn btn-ghost btn-sm" id="btn-copiar" type="button">Copiar resumo</button>
-                  <button class="btn btn-danger btn-sm" id="btn-limpar" type="button">Limpar tudo</button>
-                </div>
-              </div>
-              <div class="barra" id="barra-empilhada"></div>
-              <div class="legenda" id="legenda"></div>
-            </div>
-          </div>
-
           <!-- MÃO DE OBRA -->
           <section class="painel" style="--cor:var(--c-mao)">
             <div class="painel-head"><h2>Mão de obra</h2><span class="subtotal num" id="sub-mao">R$ 0,00</span></div>
