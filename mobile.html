@@ -961,6 +961,7 @@ function getNavSections() {
       { key: 'conciliacao', label: 'Conciliação', icon: 'ti-building-bank' }
     ]},
     { section: 'Operacional', items: [
+      { key: 'galpao', label: 'Galpão', icon: 'ti-building-warehouse' },
       { key: 'frota', label: 'Frota', icon: 'ti-car' },
       { key: 'mapa_operacoes', label: 'Mapa', icon: 'ti-map' }
     ].concat(kanbanItems) }
@@ -1118,6 +1119,13 @@ function switchTab(key) {
     document.getElementById('fab').style.display = 'none';
     document.getElementById('content').innerHTML =
       '<iframe src="faturamento.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
+  } else if (key === 'galpao') {
+    document.documentElement.style.setProperty('--accent', '#F5B800');
+    document.getElementById('top-title').textContent = 'Galpão';
+    document.getElementById('top-sub').textContent = 'custo operacional e coleta';
+    document.getElementById('fab').style.display = 'none';
+    document.getElementById('content').innerHTML =
+      '<iframe src="galpao.html" style="width:100%;flex:1;border:none;height:100%" allow="clipboard-write" onload="onFrameLoadMobile(this)"></iframe>';
   } else if (key === 'frota') {
     document.documentElement.style.setProperty('--accent', '#F5B800');
     document.getElementById('top-title').textContent = 'Gestão da Frota';
