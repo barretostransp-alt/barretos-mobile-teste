@@ -905,7 +905,7 @@ body.tema-claro .tbl thead tr{background:#F8FAFC!important;}
 
 <!-- Tabelas de Comissão (só gestor edita; qualquer um com acesso à Frota só lê) -->
 <div id="modal-comissao-tabelas" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:540px">
+  <div class="modal" style="max-width:640px">
     <div class="modal-header">
       <div class="modal-title"><i class="ti ti-percentage" style="color:var(--gold);margin-right:6px"></i>Tabelas de Comissão</div>
       <button class="modal-close" onclick="document.getElementById('modal-comissao-tabelas').classList.remove('open')">×</button>
@@ -2388,7 +2388,7 @@ function renderComissaoTabelas() {
     const rowId = id || 'novo';
     return `<tr id="ct-row-${rowId}">
       <td><input class="form-input" id="ct-nome-${rowId}" value="${novo?'':(t.nome||'')}" placeholder="Nome" style="min-width:110px"></td>
-      <td><select class="form-input" id="ct-tipo-${rowId}">
+      <td><select class="form-input" id="ct-tipo-${rowId}" style="min-width:140px">
         <option value="fixo" ${t.tipo==='fixo'?'selected':''}>Fixo (R$)</option>
         <option value="percentual" ${t.tipo==='percentual'||novo?'selected':''}>% do frete</option>
       </select></td>
@@ -2409,7 +2409,7 @@ function adicionarLinhaComissaoTabela() {
   if (document.getElementById('ct-row-novo')) return; // já tem uma linha em branco aberta
   body.querySelector('tbody').insertAdjacentHTML('beforeend', `<tr id="ct-row-novo">
     <td><input class="form-input" id="ct-nome-novo" placeholder="Nome" style="min-width:110px"></td>
-    <td><select class="form-input" id="ct-tipo-novo">
+    <td><select class="form-input" id="ct-tipo-novo" style="min-width:140px">
       <option value="fixo">Fixo (R$)</option>
       <option value="percentual" selected>% do frete</option>
     </select></td>
